@@ -26,6 +26,8 @@ from profile_utils import ensure_profile, load_profiles
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from profile_utils import ensure_profile, load_profiles, save_profiles
 from collections import defaultdict
+from subscription_utils import ensure_user, has_access
+
 
 car_states = defaultdict(dict)
 
@@ -1173,4 +1175,5 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
