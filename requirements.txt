@@ -1,9 +1,11 @@
-aiogram
+aiogram==3.4.1
+python-dotenv
 telethon
 aiohttp
 psycopg2-binary
 pyTelegramBotAPI
 requests
+
 
 
 
