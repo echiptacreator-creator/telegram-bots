@@ -1,58 +1,35 @@
-import json
-import os
+from db.database import get_conn
 import time
-from datetime import date
-
-
-# 🔥 ANIQ: avtobot.py turgan papka
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-SUBS_FILE = os.path.join(BASE_DIR, "subscriptions.json")
 
 PRICE = 30000
 
-
-def load_subs():
-    if not os.path.exists(SUBS_FILE):
-        return {}
-    try:
-        with open(SUBS_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception:
-        return {}
-
-
-def save_subs(data):
-    with open(SUBS_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-
-
 def ensure_user(user_id: int, username: str | None):
-    subs = load_subs()
-    uid = str(user_id)
+    conn = get_conn()
+    cur = conn.cursor()
 
-    if uid not in subs:
-        subs[uid] = {
-            "username": username,
-            "status": "pending",
-            "paid_until": None,
-            "created_at": int(time.time())
-        }
-        save_subs(subs)
-        return True   # 👈 YANGI USER
+    cur.execute("SELECT 1 FROM subscriptions WHERE user_id = ?", (user_id,))
+    if cur.fetchone():
+        return False
 
-    return False      # 👈 OLDIN BOR
+    cur.execute("""
+        INSERT INTO subscriptions (user_id, username, status, paid_until, created_at)
+        VALUES (?, ?, 'pending', NULL, ?)
+    """, (user_id, username, int(time.time())))
+
+    conn.commit()
+    conn.close()
+    return True
 
 
 def has_access(user_id: int) -> bool:
-    subs = load_subs()
-    user = subs.get(str(user_id))
-    return bool(user and user["status"] == "active")
+    conn = get_conn()
+    cur = conn.cursor()
 
-    from datetime import date
+    cur.execute("""
+        SELECT status FROM subscriptions
+        WHERE user_id = ?
+    """, (user_id,))
 
-def days_left(user: dict) -> int | None:
-    if not user.get("paid_until"):
-        return None
-
-    end = date.fromisoformat(user["paid_until"])
-    return (end - date.today()).days
+    row = cur.fetchone()
+    conn.close()
+    return bool(row and row[0] == "active")
