@@ -1,7 +1,9 @@
 aiogram
 telethon
 aiohttp
+psycopg2-binary
 pyTelegramBotAPI
 requests
+
 
 
