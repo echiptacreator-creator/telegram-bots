@@ -1,5 +1,7 @@
 aiogram
+telethon
 aiohttp
 pyTelegramBotAPI
 requests
+
 
