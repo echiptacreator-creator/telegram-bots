@@ -1,67 +1,39 @@
-import asyncio
-from subscription_utils import load_subs, save_subs, days_left
+from db.database import get_conn
+from datetime import date
 from aiogram import Bot
+import asyncio
 
-SERVICE_BOT_TOKEN = "8485200508:AAEIwbb9HpGBUX_mWPGVplpxNRoXXnlSOrU"
-bot = Bot(SERVICE_BOT_TOKEN)
+bot = Bot("BOT_TOKEN")
 
 async def subscription_watcher():
     while True:
-        print("🔍 Subscription watcher tekshiruvdan o‘tyapti")
-        subs = load_subs()
+        conn = get_conn()
+        cur = conn.cursor()
 
-        for user_id, user in subs.items():
-            if user["status"] != "active":
+        cur.execute("""
+            SELECT user_id, paid_until FROM subscriptions
+            WHERE status = 'active'
+        """)
+
+        rows = cur.fetchall()
+
+        for user_id, paid_until in rows:
+            if not paid_until:
                 continue
 
-            left = days_left(user)
-            if left is None:
-                continue
+            left = (date.fromisoformat(paid_until) - date.today()).days
 
-            uid = int(user_id)
+            if left == 1:
+                await bot.send_message(user_id, "⚠️ Obuna 1 kun qoldi")
 
-            # ⏳ 1 HAFTA QOLDI
-            if left == 7:
-                await bot.send_message(
-                    uid,
-                    "⏳ Obunangiz tugashiga 1 hafta qoldi.\n"
-                    "Iltimos, to‘lovni oldindan amalga oshiring."
-                )
-                
-            # ⏳ 5 KUN QOLDI
-            if left == 5:
-                await bot.send_message(
-                    uid,
-                    "⏳ Obunangiz tugashiga 5 kun qoldi.\n"
-                    "Iltimos, to‘lovni oldindan amalga oshiring."
-                )
+            if left < 0:
+                cur.execute("""
+                    UPDATE subscriptions
+                    SET status='blocked'
+                    WHERE user_id=?
+                """, (user_id,))
 
-            # ⏳ 3 KUN QOLDI
-            if left == 3:
-                await bot.send_message(
-                    uid,
-                    "⏳ Obunangiz tugashiga 3 kun qoldi.\n"
-                    "Iltimos, to‘lovni oldindan amalga oshiring."
-                )
+        conn.commit()
+        conn.close()
 
-            # ⏳ 1 KUN QOLDI
-            elif left == 1:
-                await bot.send_message(
-                    uid,
-                    "⚠️ Obunangiz tugashiga 1 kun qoldi!\n"
-                    "Aks holda xizmat bloklanadi."
-                )
-
-            # ❌ MUDDAT TUGADI
-            elif left < 0:
-                user["status"] = "blocked"
-                await bot.send_message(
-                    uid,
-                    "⛔ Obunangiz muddati tugadi.\n"
-                    "Xizmat vaqtincha bloklandi."
-                )
-
-        save_subs(subs)
-
-        # 🔁 HAR 24 SOATDA
-        await asyncio.sleep(60 * 60 * 24)
+        await asyncio.sleep(86400)
