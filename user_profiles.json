@@ -1,0 +1,29 @@
+{
+  "515902673": {
+    "username": "khamilofff",
+    "created_at": 1768019601,
+    "phone": null,
+    "cars": [
+      {
+        "id": "car_1",
+        "brand": "Cobalt",
+        "color": "Qizil",
+        "fuel": "Benzin",
+        "plate": "60V465AA",
+        "added_at": 1768019633
+      }
+    ]
+  },
+  "5696203814": {
+    "username": null,
+    "created_at": 1768019912,
+    "phone": null,
+    "cars": []
+  },
+  "7194171107": {
+    "username": null,
+    "created_at": 1768040793,
+    "phone": null,
+    "cars": []
+  }
+}

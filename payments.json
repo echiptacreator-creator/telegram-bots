@@ -1,0 +1,42 @@
+{
+  "f3b327ff-7172-4b65-9c8e-db9a97a0e0e6": {
+    "user_id": 6840894477,
+    "amount": 30000,
+    "period_days": 30,
+    "approved_at": 1768008035,
+    "approved_by": 515902673,
+    "status": "approved"
+  },
+  "e74c3759-3e7e-465d-bb02-27893d0d621d": {
+    "user_id": 6840894477,
+    "amount": 30000,
+    "period_days": 30,
+    "approved_at": 1768012713,
+    "approved_by": 515902673,
+    "status": "approved"
+  },
+  "142acfe9-844a-4f7e-8535-103b0484b324": {
+    "user_id": 5696203814,
+    "amount": 30000,
+    "period_days": 30,
+    "approved_at": 1768013567,
+    "approved_by": 515902673,
+    "status": "approved"
+  },
+  "ab70d2f8-f33a-4034-80bf-573999cc8644": {
+    "user_id": 5696203814,
+    "amount": 30000,
+    "period_days": 30,
+    "approved_at": 1768014121,
+    "approved_by": 515902673,
+    "status": "approved"
+  },
+  "adc1cc71-8961-430b-b759-742658e9630e": {
+    "user_id": 5696203814,
+    "amount": 30000,
+    "period_days": 30,
+    "approved_at": 1768019824,
+    "approved_by": 515902673,
+    "status": "approved"
+  }
+}
