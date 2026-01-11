@@ -65,8 +65,6 @@ def save_group(user_id, dialog, username):
     conn.commit()
     conn.close()
 
-
-
 # ================= GLOBAL =================
 
 bot = Bot(BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
@@ -253,9 +251,10 @@ def main_menu():
 
 @dp.message(F.text == "/start")
 async def start_handler(message: Message):
-    subs = get_all_subs()
-    is_new = str(message.from_user.id) not in subs
-
+    await message.answer(
+        "👋 Xush kelibsiz!",
+        reply_markup=main_menu()
+    )
 
     if is_new:
         if message.from_user.username:
@@ -1154,6 +1153,7 @@ async def save_car(cb: CallbackQuery):
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
+
 
 
 
