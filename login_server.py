@@ -148,7 +148,6 @@ def verify_password():
 me = client.get_me()
 user_id = me.id
 
-from database import get_db
 conn = get_db()
 cur = conn.cursor()
 
@@ -167,9 +166,11 @@ cur.close()
 conn.close()
 
 
+
 # =========================
 # RUN
 # =========================
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
+
 
