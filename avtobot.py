@@ -82,16 +82,18 @@ PAGE_SIZE = 20
 
 # ================= HELPERS =================
 
-def get_user_phone(user_id: int):
+def is_logged_in(user_id):
     conn = get_db()
     cur = conn.cursor()
     cur.execute(
-        "SELECT phone FROM authorized_users WHERE user_id = %s",
+        "SELECT 1 FROM authorized_users WHERE user_id = %s",
         (user_id,)
     )
-    row = cur.fetchone()
+    result = cur.fetchone()
+    cur.close()
     conn.close()
-    return row["phone"] if row else None
+    return result is not None
+
 
 
 async def main():
@@ -1170,6 +1172,7 @@ async def save_car(cb: CallbackQuery):
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
+
 
 
 
