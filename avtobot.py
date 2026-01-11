@@ -173,8 +173,7 @@ BRANDS = {
 
 
 def is_logged_in(user_id: int) -> bool:
-    return get_user_phone(user_id) is not None
-
+    return True
 
 async def get_client(user_id: int) -> TelegramClient:
     if user_id in user_clients:
@@ -1155,6 +1154,7 @@ async def save_car(cb: CallbackQuery):
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
+
 
 
 
