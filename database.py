@@ -17,7 +17,8 @@ def init_db():
     CREATE TABLE IF NOT EXISTS subscriptions (
         user_id BIGINT PRIMARY KEY,
         status TEXT,
-        paid_until TEXT
+        paid_until DATE,
+        created_at TIMESTAMP DEFAULT NOW()
     );
     """)
 
@@ -66,6 +67,7 @@ def init_db():
     conn.commit()
     cur.close()
     conn.close()
+
 
 
 
