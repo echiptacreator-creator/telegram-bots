@@ -1,6 +1,7 @@
-aiogram==3.4.1
+python-3.11.9
 aiohttp
 python-dotenv
 telethon
 flask
 requests
+
