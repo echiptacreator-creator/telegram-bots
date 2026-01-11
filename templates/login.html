@@ -202,13 +202,21 @@ async function sendCode() {
 
     const res = await fetch("/send_code", {
         method: "POST",
-        headers: {
-        "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-        phone: phone
-        })
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ phone })
     });
+
+    const data = await res.json();
+    console.log("send_code:", data);
+
+    if (data.status === "code_sent") {
+        show("codeStep");
+    } else if (data.status === "flood_wait") {
+        showMessage("error", "Juda ko‘p urinish. " + data.seconds + " soniya kuting");
+    } else {
+        showMessage("error", "Kod yuborilmadi");
+    }
+}
 
     const data = await res.json();
 
@@ -227,27 +235,33 @@ async function sendCode() {
 
 // 📩 KOD TASDIQLASH
 async function verifyCode() {
-    const codeInput = document.getElementById("code");
-    if (!codeInput) {
-        alert("❌ Code input topilmadi");
-        return;
-    }
-
-    const code = codeInput.value.trim();
+    const code = document.getElementById("code").value.trim();
     if (!code) {
         showMessage("error", "Kodni kiriting");
         return;
     }
 
-    const res = await fetch("/send_code", {
+    const res = await fetch("/verify_code", {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
+        headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
-            phone: phone
+            phone: phoneValue,
+            code: code
         })
     });
+
+    const data = await res.json();
+    console.log("verify_code:", data);
+
+    if (data.status === "success") {
+        showMessage("success", "Muvaffaqiyatli login");
+        Telegram.WebApp.close();
+    } else if (data.status === "2fa_required") {
+        show("passwordStep");
+    } else {
+        showMessage("error", "Kod noto‘g‘ri");
+    }
+}
 
     const data = await res.json();
 
