@@ -23,7 +23,7 @@ def add_post_stat(user_id):
     cur = conn.cursor()
     cur.execute("""
         INSERT INTO user_stats (user_id, posts_sent)
-        VALUES (?, 1)
+        VALUES (%s, 1)
         ON CONFLICT(user_id)
         DO UPDATE SET posts_sent = posts_sent + 1
     """, (user_id,))
@@ -42,3 +42,4 @@ def add_group_stat(user_id):
     """, (user_id,))
     conn.commit()
     conn.close()
+
