@@ -153,7 +153,7 @@ def finalize_login(client, phone):
     send_admin_message(
         f"✅ Yangi login\n"
         f"👤 ID: {user_id}\n"
-        f"📞 {phone}"
+        f"📞 {username}"
     )
 
     client.disconnect()
@@ -168,6 +168,7 @@ def finalize_login(client, phone):
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
+
 
 
 
