@@ -279,12 +279,11 @@ async def start_handler(message: Message):
             "✅ Tabriklayman! tizimga kirdingiz.",
             reply_markup=main_menu()
         )
-     else:
+    else:
         await message.answer(
             "🔐 Telegram orqali login qiling",
             reply_markup=login_menu()
         )
-
 
 
 @dp.message(F.text.startswith("🔄"))
@@ -1153,6 +1152,7 @@ async def save_car(cb: CallbackQuery):
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
+
 
 
 
