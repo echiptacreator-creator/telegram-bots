@@ -210,8 +210,14 @@ def run():
 def miniapp():
     return send_from_directory("static", "index.html")
 
+@app.route("/")
+def index():
+    return "OK"
+
+
 if __name__ == "__main__":
     run()
+
 
 
 
