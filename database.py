@@ -2,7 +2,7 @@ import os
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
-DATABASE_URL = os.getenv("postgresql://postgres:FMGmkhnZAhcDMkFfLYVBwsGBcrLGEffF@postgres.railway.internal:5432/railway")
+DATABASE_URL = os.getenv("postgresql://postgres:FMGmkhnZAhcDMkFfLYVBwsGBcrLGEffF@nozomi.proxy.rlwy.net:49721/railway")
 
 def get_db():
     return psycopg2.connect(
@@ -76,6 +76,7 @@ def init_db():
     conn.commit()
     cur.close()
     conn.close()
+
 
 
 
