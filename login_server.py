@@ -27,7 +27,7 @@ bot = Bot(BOT_TOKEN)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 SESSIONS_DIR = os.path.join(BASE_DIR, "sessions")
 os.makedirs(SESSIONS_DIR, exist_ok=True)
-BOT_NOTIFY_URL = "https://telegram-bots-production-af1b.up.railway.app"
+BOT_NOTIFY_URL = "https://telegram-bots-production-af1b.up.railway.app/miniapp"
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 AUTHORIZED_FILE = os.path.join(BASE_DIR, "authorized_users.json")
 
@@ -216,6 +216,7 @@ if __name__ == "__main__":
 
 if __name__ == "__main__":
     run()
+
 
 
 
