@@ -137,6 +137,7 @@ def finalize_login(client, phone):
         ON CONFLICT (user_id)
         DO UPDATE SET phone = EXCLUDED.phone
     """, (user_id, phone))
+        )
     )
     conn.commit()
     conn.close()
@@ -159,5 +160,6 @@ def finalize_login(client, phone):
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
+
 
 
