@@ -26,7 +26,6 @@ from subscription_db import get_all_subs
 from config import PRICE
 from database import get_db
 from database import init_db
-import sqlite3
 
 init_db()
 
@@ -56,7 +55,7 @@ def save_group(user_id, dialog, username):
     cur.execute("""
         INSERT OR IGNORE INTO saved_groups
         (user_id, group_id, name, type, saved_at)
-        VALUES (?, ?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s, %s)
     """, (
         user_id,
         dialog.id,
@@ -1154,6 +1153,7 @@ async def save_car(cb: CallbackQuery):
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
+
 
 
 
