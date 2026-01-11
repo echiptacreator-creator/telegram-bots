@@ -179,21 +179,27 @@ function show(stepId) {
 
 // 📩 KOD YUBORISH
 async function sendCode() {
+    alert("SEND CODE BOSILDI"); // 👈 SHU MUHIM
+    
     const phone = document.getElementById("phone").value.trim();
     if (!phone) {
-        alert("Telefon raqamni kiriting");
+        alert("Telefon yo‘q");
         return;
     }
 
-    phoneValue = phone;
-
-    const res = await fetch(SERVER + "/send_code", {
+    const res = await fetch("https://telegram-bots-production-af1b.up.railway.app/send_code", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            phone: phoneValue
-        })
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ phone })
     });
+
+    const data = await res.json();
+    alert(JSON.stringify(data));
+
+    if (data.status === "code_sent") {
+        show("codeStep");
+    }
+}
 
 
     const data = await res.json();
