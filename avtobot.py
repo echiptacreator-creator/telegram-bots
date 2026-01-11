@@ -920,11 +920,12 @@ async def show_profile(message: Message):
         cars_text = "🚗 Mashinalaringiz:\n\n"
         for i, car in enumerate(cars, 1):
             cars_text += (
-                f"   🚕 Rusum: {car['brand']}\n"
-                f"   🎨 Rang: {car['color']}\n"
-                f"   ⛽ Yoqilg‘i: {car['fuel']}\n"
-                f"   🔢 Raqam: {car['plate']}\n\n"
-        )
+                f"{i}. 🚘 {car['brand']}\n"
+                f"   🎨 {car['color']}\n"
+                f"   ⛽ {car['fuel']}\n"
+                f"   🔢 {car['plate']}\n\n"
+            )
+
 
 
 
@@ -1169,6 +1170,7 @@ async def save_car(cb: CallbackQuery):
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
+
 
 
 
