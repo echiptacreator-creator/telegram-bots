@@ -36,7 +36,7 @@ def init_db():
     cur.execute("""
     CREATE TABLE IF NOT EXISTS authorized_users (
         user_id BIGINT PRIMARY KEY,
-        phone TEXT
+        phone TEXT,
         created_at TIMESTAMP DEFAULT NOW()
     );
     """)
@@ -66,6 +66,7 @@ def init_db():
     conn.commit()
     cur.close()
     conn.close()
+
 
 
 
