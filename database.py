@@ -1,14 +1,14 @@
+# database.py
 import os
 import psycopg2
-from psycopg2.extras import RealDictCursor
-
-DATABASE_URL = os.getenv("${{Postgres.DATABASE_URL}}")
 
 def get_db():
-    return psycopg2.connect(
-        DATABASE_URL,
-        cursor_factory=RealDictCursor
-    )
+    database_url = os.getenv("DATABASE_URL")
+
+    if not database_url:
+        raise RuntimeError("DATABASE_URL env variable is not set")
+
+    return psycopg2.connect(database_url)
 
 def init_db():
     conn = get_db()
@@ -76,9 +76,3 @@ def init_db():
     conn.commit()
     cur.close()
     conn.close()
-
-
-
-
-
-
