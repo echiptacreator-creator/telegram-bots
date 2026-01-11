@@ -1,7 +1,7 @@
-python-3.11.9
-aiohttp
+aiogram==3.4.1
+aiohttp==3.9.5
 python-dotenv
 telethon
 flask
 requests
-
+pydantic<2.6
