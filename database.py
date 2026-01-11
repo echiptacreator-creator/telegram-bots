@@ -25,10 +25,9 @@ def init_db():
     # === USER PROFILE ===
     cur.execute("""
     CREATE TABLE IF NOT EXISTS user_profiles (
-        user_id BIGINT PRIMARY KEY,
+        user_id TEXT PRIMARY KEY,
         username TEXT,
         phone TEXT,
-        cars JSONB DEFAULT '[]',
         created_at TIMESTAMP DEFAULT NOW()
     );
     """)
@@ -67,6 +66,7 @@ def init_db():
     conn.commit()
     cur.close()
     conn.close()
+
 
 
 
