@@ -45,3 +45,16 @@ def ensure_profile(user_id: str, username: str | None):
     cur.close()
     conn.close()
     return profile
+
+def load_profiles():
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM user_profiles")
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    return rows
+    
+
+
+
