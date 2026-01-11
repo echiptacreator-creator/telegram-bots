@@ -1143,19 +1143,10 @@ async def save_car(cb: CallbackQuery):
 #        reply_markup=main_menu()
 #    )
 
-
-async def main():
-    print("🤖 Avtobot ishga tushdi")
-
-    # 🔥 AVTO OBUNA TEKSHIRUVNI ISHGA TUSHIRAMIZ
-    asyncio.create_task(subscription_watcher())
-
-    await dp.start_polling(bot)
-
-
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
+
 
 
 
