@@ -6,12 +6,15 @@ import requests
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from telethon.sync import TelegramClient
+from flask import Flask
+import os
 from telethon.errors import (
     PhoneCodeInvalidError,
     SessionPasswordNeededError,
     FloodWaitError,
-    PhoneNumberInvalidError
-)
+    PhoneNumberInvalidError)
+
+app = Flask(__name__)
 
 API_ID = 25780325
 API_HASH = "2c4cb6eee01a46dc648114813042c453"
@@ -196,3 +199,4 @@ def run():
 
 if __name__ == "__main__":
     run()
+
