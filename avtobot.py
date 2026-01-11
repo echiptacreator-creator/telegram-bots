@@ -250,14 +250,8 @@ admin_bot = Bot(BOT_TOKEN)
 
 # ================= LOGIN (TEGILMADI) =================
 
-@dp.message(F.text == "/start")
+@dp.message(CommandStart())
 async def start_handler(message: Message):
-    user_id = str(message.from_user.id)
-
-    subs = get_all_subs()
-    is_new = user_id not in subs   # 🔥 MANA SHU YETISHMAYOTGAN EDI
-
-        # 👇 pastdagi eski logika o‘zgarishsiz
     if is_logged_in(message.from_user.id):
         await message.answer(
             "✅ Xush kelibsiz!",
@@ -280,7 +274,7 @@ async def check_login_handler(message: Message):
     else:
         await message.answer(
             "❌ Login topilmadi",
-            reply_markup=login_menu()
+            reply_markup=check_login_menu()
         )
 
 @dp.message(F.text == "🚪 Chiqish")
@@ -299,9 +293,8 @@ async def logout_handler(message: Message):
 
     await message.answer(
         "🚪 Tizimdan chiqdingiz",
-        reply_markup=login_menu()
+        reply_markup=check_login_menu()
     )
-
 
 # ================= POST JOYLASH =================
 
@@ -1166,6 +1159,7 @@ async def save_car(cb: CallbackQuery):
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
+
 
 
 
