@@ -26,6 +26,7 @@ from subscription_db import get_all_subs
 from config import PRICE
 from database import get_db
 from database import init_db
+from aiogram.filters import CommandStart
 init_db()
 
 car_states = defaultdict(dict)
@@ -235,18 +236,7 @@ def main_menu():
         resize_keyboard=True
     )
 
-
-
-# ================= LOGIN (TEGILMADI) =================
-
-@dp.message(F.text == "/start")
-async def start_handler(message: Message):
-    user_id = str(message.from_user.id)
-
-    subs = get_all_subs()
-    is_new = user_id not in subs   # 🔥 MANA SHU YETISHMAYOTGAN EDI
-
-    admin_bot = Bot(BOT_TOKEN)
+admin_bot = Bot(BOT_TOKEN)
 
     def notify_admin(user_id, phone):
         async def _send():
@@ -258,7 +248,16 @@ async def start_handler(message: Message):
         )
     asyncio.run(_send())
 
-    # 👇 pastdagi eski logika o‘zgarishsiz
+# ================= LOGIN (TEGILMADI) =================
+
+@dp.message(F.text == "/start")
+async def start_handler(message: Message):
+    user_id = str(message.from_user.id)
+
+    subs = get_all_subs()
+    is_new = user_id not in subs   # 🔥 MANA SHU YETISHMAYOTGAN EDI
+
+        # 👇 pastdagi eski logika o‘zgarishsiz
     if is_logged_in(message.from_user.id):
         await message.answer(
             "✅ Xush kelibsiz!",
@@ -1167,6 +1166,7 @@ async def save_car(cb: CallbackQuery):
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
+
 
 
 
