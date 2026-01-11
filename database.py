@@ -1,5 +1,5 @@
-import sqlite3
 from config import DB_PATH
+import sqlite3
 
 def get_db():
     return sqlite3.connect(DB_PATH)
@@ -8,7 +8,26 @@ def init_db():
     conn = get_db()
     cur = conn.cursor()
 
-    # 🔹 subscriptions
+    # 🔐 authorized_users (JSON o‘rniga)
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS authorized_users (
+        user_id INTEGER PRIMARY KEY,
+        phone TEXT,
+        created_at INTEGER
+    )
+    """)
+
+    # 👤 user_profiles (phone bilan)
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS user_profiles (
+        user_id INTEGER PRIMARY KEY,
+        username TEXT,
+        phone TEXT,
+        created_at INTEGER
+    )
+    """)
+
+    # 📦 subscriptions
     cur.execute("""
     CREATE TABLE IF NOT EXISTS subscriptions (
         user_id INTEGER PRIMARY KEY,
@@ -17,16 +36,7 @@ def init_db():
     )
     """)
 
-    # 🔹 user_profiles
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS user_profiles (
-        user_id INTEGER PRIMARY KEY,
-        username TEXT,
-        created_at INTEGER
-    )
-    """)
-
-    # 🔹 payments (agar ishlatilsa)
+    # 💳 payments
     cur.execute("""
     CREATE TABLE IF NOT EXISTS payments (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -36,7 +46,7 @@ def init_db():
     )
     """)
 
-    # 🔹 stats (agar ishlatilsa)
+    # 📊 stats
     cur.execute("""
     CREATE TABLE IF NOT EXISTS stats (
         key TEXT PRIMARY KEY,
@@ -46,4 +56,3 @@ def init_db():
 
     conn.commit()
     conn.close()
-
