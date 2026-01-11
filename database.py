@@ -1,68 +1,45 @@
 import os
 import psycopg2
 
+DATABASE_URL = os.getenv("DATABASE_URL")
+
 def get_db():
-    database_url = os.getenv("DATABASE_URL")
-    if not database_url:
+    if not DATABASE_URL:
         raise RuntimeError("DATABASE_URL is not set")
-    return psycopg2.connect(database_url)
+    return psycopg2.connect(DATABASE_URL)
 
 def init_db():
     conn = get_db()
     cur = conn.cursor()
 
     cur.execute("""
-        CREATE TABLE IF NOT EXISTS authorized_users (
-            user_id BIGINT PRIMARY KEY,
-            phone TEXT
-        )
+    CREATE TABLE IF NOT EXISTS subscriptions (
+        user_id BIGINT PRIMARY KEY,
+        status TEXT,
+        paid_until TEXT
+    );
     """)
 
     cur.execute("""
-        CREATE TABLE IF NOT EXISTS saved_groups (
-            id SERIAL PRIMARY KEY,
-            user_id BIGINT,
-            group_id BIGINT,
-            name TEXT,
-            type TEXT,
-            saved_at BIGINT
-        )
+    CREATE TABLE IF NOT EXISTS payments (
+        id SERIAL PRIMARY KEY,
+        user_id BIGINT,
+        amount INT,
+        created_at INT
+    );
     """)
 
     cur.execute("""
-        CREATE TABLE IF NOT EXISTS subscriptions (
-            user_id BIGINT PRIMARY KEY,
-            status TEXT,
-            paid_until TEXT
-        )
-    """)
-
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS user_profiles (
-            user_id BIGINT PRIMARY KEY,
-            username TEXT,
-            phone TEXT,
-            created_at BIGINT
-        )
-    """)
-
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS stats_posts (
-            id SERIAL PRIMARY KEY,
-            user_id BIGINT,
-            created_at BIGINT
-        )
-    """)
-
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS stats_groups (
-            id SERIAL PRIMARY KEY,
-            user_id BIGINT,
-            created_at BIGINT
-        )
+    CREATE TABLE IF NOT EXISTS saved_groups (
+        id SERIAL PRIMARY KEY,
+        user_id BIGINT,
+        group_id BIGINT,
+        name TEXT,
+        type TEXT,
+        saved_at INT
+    );
     """)
 
     conn.commit()
+    cur.close()
     conn.close()
-
-
