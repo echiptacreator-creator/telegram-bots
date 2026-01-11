@@ -25,6 +25,10 @@ API_HASH = "2c4cb6eee01a46dc648114813042c453"
 BOT_TOKEN = "8485200508:AAEIwbb9HpGBUX_mWPGVplpxNRoXXnlSOrU"
 bot = Bot(BOT_TOKEN)
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+SESSIONS_DIR = os.path.join(BASE_DIR, "sessions")
+os.makedirs(SESSIONS_DIR, exist_ok=True)
+
 # phone -> {client, phone_code_hash}
 pending = {}
 
@@ -191,6 +195,7 @@ def auth():
 # =========================
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
+
 
 
 
