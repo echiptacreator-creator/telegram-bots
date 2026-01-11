@@ -24,14 +24,14 @@ def ensure_profile(user_id, username=None):
     conn = get_db()
     cur = conn.cursor()
 
-    cur.execute("SELECT * FROM user_profiles WHERE user_id = ?", (user_id,))
+    cur.execute("SELECT * FROM user_profiles WHERE user_id = %s", (user_id,))
     row = cur.fetchone()
 
     if not row:
         cur.execute("""
             INSERT INTO user_profiles
             (user_id, username, phone, cars, created_at)
-            VALUES (?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s)
         """, (
             user_id,
             username,
@@ -76,5 +76,6 @@ def save_profiles(profiles: dict):
 
     conn.commit()
     conn.close()
+
 
 
