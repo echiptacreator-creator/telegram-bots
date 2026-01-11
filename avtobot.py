@@ -19,7 +19,6 @@ from aiogram import Bot
 from stats_db import add_post_stat, add_group_stat
 from payment_db import load_payments
 import time
-from profile_utils import ensure_profile, load_profiles
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from collections import defaultdict
 from subscription_db import get_all_subs
@@ -1170,6 +1169,7 @@ async def save_car(cb: CallbackQuery):
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
+
 
 
 
