@@ -168,26 +168,21 @@ BRANDS = {
     ]
 }
 
-
-
 def is_logged_in(user_id: int) -> bool:
-    return True
+    conn = get_db()
+    cur = conn.cursor()
 
-async def get_client(user_id: int) -> TelegramClient:
-    if user_id in user_clients:
-        return user_clients[user_id]
+    cur.execute(
+        "SELECT 1 FROM authorized_users WHERE user_id = %s",
+        (str(user_id),)
+    )
 
-    phone = get_user_phone(user_id)
-    if not phone:
-        raise RuntimeError("User not authorized")
+    exists = cur.fetchone() is not None
 
-    session_path = os.path.join(SESSIONS_DIR, phone.replace("+", ""))
-    client = TelegramClient(session_path, API_ID, API_HASH)
+    cur.close()
+    conn.close()
+    return exists
 
-    await client.start()   # 🔥 MUHIM
-
-    user_clients[user_id] = client
-    return client
 
 #================== JSONDAN GURUH OQISH ================
 
@@ -214,15 +209,6 @@ def load_saved_groups():
 
 # ================= KEYBOARDS =================
 
-def login_menu():
-    return ReplyKeyboardMarkup(
-        keyboard=[[KeyboardButton(
-            text="🔐 Telegram login",
-            web_app=WebAppInfo(url=LOGIN_WEBAPP_URL)
-        )]],
-        resize_keyboard=True
-    )
-
 def check_login_menu():
     return ReplyKeyboardMarkup(
         keyboard=[
@@ -234,6 +220,7 @@ def check_login_menu():
         ],
         resize_keyboard=True
     )
+
 
 def main_menu():
     return ReplyKeyboardMarkup(
@@ -277,13 +264,13 @@ async def start_handler(message: Message):
     # 👇 pastdagi eski logika o‘zgarishsiz
     if is_logged_in(message.from_user.id):
         await message.answer(
-            "✅ Tabriklayman! tizimga kirdingiz.",
+            "✅ Xush kelibsiz!",
             reply_markup=main_menu()
         )
     else:
         await message.answer(
-            "🔐 Telegram orqali login qiling",
-            reply_markup=login_menu()
+            "🔐 Avval Telegram login qiling",
+            reply_markup=check_login_menu()
         )
 
 
@@ -1148,6 +1135,7 @@ async def save_car(cb: CallbackQuery):
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
+
 
 
 
