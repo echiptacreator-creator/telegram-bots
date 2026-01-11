@@ -17,7 +17,6 @@ from aiogram.enums import ParseMode
 from telethon import TelegramClient
 from aiogram import Bot
 from stats_db import add_post_stat, add_group_stat
-from subscription_watcher import subscription_watcher
 from payment_db import load_payments
 import time
 from profile_utils import ensure_profile, load_profiles
@@ -1157,6 +1156,7 @@ async def main():
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
+
 
 
 
