@@ -75,6 +75,9 @@ def session_path(phone):
         # ===== SEND CODE =====
 @app.route("/send_code", methods=["POST"])
 def send_code():
+    print("🔥 SEND_CODE KELDI")
+    return jsonify({"status": "code_sent"})
+
     data = request.json
     phone = data.get("phone")
 
@@ -200,6 +203,7 @@ def auth():
 # =========================
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
+
 
 
 
