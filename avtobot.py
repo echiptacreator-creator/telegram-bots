@@ -236,18 +236,6 @@ def main_menu():
         resize_keyboard=True
     )
 
-admin_bot = Bot(BOT_TOKEN)
-
-    def notify_admin(user_id, phone):
-        async def _send():
-            await admin_bot.send_message(
-                ADMIN_CHAT_ID,
-                f"🔐 Yangi login:\n\n"
-                f"👤 User ID: {user_id}\n"
-                f"📱 Username: {username}"
-        )
-    asyncio.run(_send())
-
 # ================= LOGIN (TEGILMADI) =================
 
 @dp.message(CommandStart())
@@ -1159,6 +1147,7 @@ async def save_car(cb: CallbackQuery):
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
+
 
 
 
