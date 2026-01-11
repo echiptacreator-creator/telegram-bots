@@ -22,17 +22,19 @@ def init_db():
         created_at INTEGER
     )
     """)
-    # saved groups
+    
+    # saved_groups
+    cur.execute("""
     CREATE TABLE IF NOT EXISTS saved_groups (
-    id SERIAL PRIMARY KEY,
-    user_id BIGINT,
-    group_id BIGINT,
-    name TEXT,
-    type TEXT,
-    saved_at BIGINT,
-    UNIQUE (user_id, group_id)
-)
-""")
+        id SERIAL PRIMARY KEY,
+        user_id BIGINT,
+        group_id BIGINT,
+        name TEXT,
+        type TEXT,
+        saved_at BIGINT,
+        UNIQUE (user_id, group_id)
+    )
+    """)
 
     # 👤 user_profiles (phone bilan)
     cur.execute("""
@@ -74,6 +76,7 @@ def init_db():
     conn.commit()
     cur.close()
     conn.close()
+
 
 
 
