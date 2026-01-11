@@ -34,7 +34,7 @@ car_states = defaultdict(dict)
 # ================= CONFIG =================
 
 BOT_TOKEN = "8485200508:AAEIwbb9HpGBUX_mWPGVplpxNRoXXnlSOrU"
-LOGIN_WEBAPP_URL = "https://hyperactive-lorean-zoologically.ngrok-free.dev"
+LOGIN_WEBAPP_URL = "https://telegram-bots-production-af1b.up.railway.app"
 
 API_ID = 25780325
 API_HASH = "2c4cb6eee01a46dc648114813042c453"
@@ -1170,6 +1170,7 @@ async def save_car(cb: CallbackQuery):
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
+
 
 
 
