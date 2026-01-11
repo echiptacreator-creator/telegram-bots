@@ -27,7 +27,8 @@ def init_db():
         user_id BIGINT PRIMARY KEY,
         username TEXT,
         phone TEXT,
-        created_at BIGINT
+        cars JSONB DEFAULT '[]',
+        created_at TIMESTAMP DEFAULT NOW()
     );
     """)
 
@@ -65,5 +66,6 @@ def init_db():
     conn.commit()
     cur.close()
     conn.close()
+
 
 
