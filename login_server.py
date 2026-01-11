@@ -70,7 +70,7 @@ class LoginHandler(BaseHTTPRequestHandler):
         password = data.get("password")
 
         # ===== SEND CODE =====
-       @app.route("/send_code", methods=["POST"])
+@app.route("/send_code", methods=["POST"])
 def send_code():
     phone = request.json.get("phone")
 
@@ -200,6 +200,7 @@ def auth():
 # =========================
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
+
 
 
 
