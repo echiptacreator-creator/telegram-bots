@@ -3,7 +3,7 @@ import os
 import psycopg2
 
 def get_db():
-    database_url = os.getenv("DATABASE_URL")
+    DATABASE_URL = ${{ Postgres.DATABASE_URL }}
 
     if not database_url:
         raise RuntimeError("DATABASE_URL env variable is not set")
@@ -76,3 +76,4 @@ def init_db():
     conn.commit()
     cur.close()
     conn.close()
+
