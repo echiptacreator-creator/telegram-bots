@@ -197,7 +197,7 @@ async function sendCode() {
         showMessage("error", "Telefon raqamni kiriting");
         return;
     }
-
+alert("SEND CODE BOSILDI");
     phoneValue = phone;
 
     const res = await fetch(SERVER + "/send_code", {
@@ -214,7 +214,6 @@ async function sendCode() {
         showMessage("error", "Kod yuborilmadi");
     }
 }
-
 
     const data = await res.json();
 
