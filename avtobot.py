@@ -951,24 +951,23 @@ async def show_profile(message: Message):
 
 @dp.message(F.contact)
 async def save_phone(message: Message):
-    user_id = str(message.from_user.id)
+    user_id = message.from_user.id
     phone = message.contact.phone_number
-    username = message.from_user.username
 
-    profiles = load_profiles()
-    profile = profiles.get(user_id)
+    conn = get_db()
+    cur = conn.cursor()
 
-    if not profile:
-        profile = ensure_profile(user_id, username)
-        profiles = load_profiles()
+    cur.execute("""
+    UPDATE user_profiles
+    SET phone = %s
+    WHERE user_id = %s
+    """, (phone, user_id))
 
-    profile["phone"] = phone
-    save_profiles(profiles)
+    conn.commit()
+    conn.close()
 
-    await message.answer(
-        "✅ Telefon raqamingiz saqlandi.\n"
-        "Profilingiz yangilandi."
-    )
+    await message.answer("✅ Telefon raqamingiz saqlandi")
+
 
 @dp.callback_query(F.data == "add_car")
 async def add_car_start(cb: CallbackQuery):
@@ -1154,6 +1153,7 @@ async def save_car(cb: CallbackQuery):
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
+
 
 
 
