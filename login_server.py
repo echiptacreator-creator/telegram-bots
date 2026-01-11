@@ -22,8 +22,6 @@ from telethon.errors import (
 def home():
     return "OK - Login server ishlayapti"
 
-app = Flask(__name__)
-
 API_ID = 25780325
 API_HASH = "2c4cb6eee01a46dc648114813042c453"
 BOT_TOKEN = "8485200508:AAEIwbb9HpGBUX_mWPGVplpxNRoXXnlSOrU"
@@ -217,6 +215,7 @@ def index():
 
 if __name__ == "__main__":
     run()
+
 
 
 
