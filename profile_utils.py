@@ -29,12 +29,10 @@ def ensure_profile(user_id, username=None):
 
     if not row:
         cur.execute("""
-            INSERT INTO user_profiles
-            (user_id, username, phone, cars, created_at)
-            VALUES (%s, %s, %s, %s, %s)
-        """, (
-            user_id,
-            username,
+            INSERT INTO user_profiles (user_id, username, phone, created_at)
+            VALUES (%s, %s, %s, NOW())
+            ON CONFLICT (user_id) DO NOTHING
+            """, (user_id, username, phone))
             None,
             json.dumps([]),
             int(time.time())
@@ -76,6 +74,7 @@ def save_profiles(profiles: dict):
 
     conn.commit()
     conn.close()
+
 
 
 
