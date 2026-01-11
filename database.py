@@ -1,18 +1,16 @@
-# database.py
 import os
 import psycopg2
 
 def get_db():
-    DATABASE_URL = ${{ Postgres.DATABASE_URL }}
-
+    database_url = os.getenv("DATABASE_URL")
     if not database_url:
-        raise RuntimeError("DATABASE_URL env variable is not set")
-
+        raise RuntimeError("DATABASE_URL is not set")
     return psycopg2.connect(database_url)
+
 
 def init_db():
     conn = get_db()
-    cur = conn.cursor()
+    cur = conn.cursor(
 
     # 🔐 authorized_users (JSON o‘rniga)
     cur.execute("""
@@ -76,4 +74,5 @@ def init_db():
     conn.commit()
     cur.close()
     conn.close()
+
 
