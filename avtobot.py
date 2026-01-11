@@ -1103,43 +1103,38 @@ async def save_car(cb: CallbackQuery):
     await cb.message.edit_reply_markup(reply_markup=None)
 
     user_id = str(cb.from_user.id)
-    username = cb.from_user.username
-
-    profiles = load_profiles()
-
-    # agar profil yo‘q bo‘lsa — yaratamiz
-    if user_id not in profiles:
-        profiles[user_id] = {
-            "username": username,
-            "created_at": int(time.time()),
-            "phone": None,
-            "cars": []
-        }
-
     car = car_states.get(cb.from_user.id)
+
     if not car:
-        await cb.answer("Xatolik", show_alert=True)
+        await cb.answer("❌ Mashina topilmadi", show_alert=True)
         return
 
-    car_data = {
-        "id": f"car_{len(profiles[user_id]['cars']) + 1}",
-        "brand": car["brand"],
-        "color": car["color"],
-        "fuel": car["fuel"],
-        "plate": car["plate"],
-        "added_at": int(time.time())
-    }
+    conn = get_db()
+    cur = conn.cursor()
 
-    profiles[user_id]["cars"].append(car_data)
+    cur.execute(
+        """
+        INSERT INTO cars (user_id, brand, color, fuel, plate, created_at)
+        VALUES (%s, %s, %s, %s, %s, %s)
+        """,
+        (
+            user_id,
+            car["brand"],
+            car["color"],
+            car["fuel"],
+            car["plate"],
+            int(time.time())
+        )
+    )
 
-    save_profiles(profiles)  # 👈 ENDI ANIQ YOZILADI
+    conn.commit()
+    cur.close()
+    conn.close()
 
     car_states.pop(cb.from_user.id, None)
 
-    await cb.message.edit_text("✅ Mashina muvaffaqiyatli qo‘shildi!")
+    await cb.message.answer("✅ Mashina muvaffaqiyatli saqlandi!")
     await cb.answer()
-
-
 
 # ================= RUN =================
 
@@ -1153,6 +1148,7 @@ async def save_car(cb: CallbackQuery):
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
+
 
 
 
