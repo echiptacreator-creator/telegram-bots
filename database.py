@@ -65,13 +65,11 @@ def init_db():
 
     # MASHINA SAQLASH
     cur.execute("""
-    CREATE TABLE IF NOT EXISTS cars (
-        id SERIAL PRIMARY KEY,
-        user_id TEXT NOT NULL,
-        brand TEXT NOT NULL,
-        color TEXT NOT NULL,
-        fuel TEXT NOT NULL,
-        plate TEXT NOT NULL,
+    CREATE TABLE IF NOT EXISTS user_profiles (
+        user_id TEXT PRIMARY KEY,
+        username TEXT,
+        phone TEXT,
+        cars JSONB DEFAULT '[]',
         created_at BIGINT
     );
     """)
@@ -79,6 +77,7 @@ def init_db():
     conn.commit()
     cur.close()
     conn.close()
+
 
 
 
