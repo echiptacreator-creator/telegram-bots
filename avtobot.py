@@ -92,6 +92,11 @@ def get_user_phone(user_id: int):
     conn.close()
     return row[0] if row else None
 
+async def main():
+    print("🤖 Avtobot ishga tushdi")
+
+    # dispatcher, router, startup ishlari
+    await dp.start_polling(bot)
 
 
 # 🚗 MASHINA RUSUMLARI (MASHHUR MODELLAR)
@@ -1146,6 +1151,7 @@ async def save_car(cb: CallbackQuery):
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
+
 
 
 
