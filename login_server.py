@@ -20,7 +20,7 @@ from database import get_db, init_db
 # ======================
 API_ID = 25780325
 API_HASH = "2c4cb6eee01a46dc648114813042c453"
-BOT_TOKEN = "2c4cb6eee01a46dc648114813042c453"
+BOT_TOKEN = "8485200508:AAEIwbb9HpGBUX_mWPGVplpxNRoXXnlSOrU"
 ADMIN_ID = 515902673  # admin bot user id
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -160,3 +160,4 @@ def finalize_login(client, phone):
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
+
