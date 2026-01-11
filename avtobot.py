@@ -274,12 +274,19 @@ async def start_handler(message: Message):
         )
 
 
-@dp.message(F.text.startswith("🔄"))
+@dp.message(F.text == "🔄 Loginni tekshirish")
 async def check_login_handler(message: Message):
     if is_logged_in(message.from_user.id):
-        await message.answer("✅ Login tasdiqlandi!", reply_markup=main_menu())
+        await message.answer(
+            "✅ Login muvaffaqiyatli!",
+            reply_markup=main_menu()
+        )
     else:
-        await message.answer("❌ Login qilinmagan.", reply_markup=login_menu())
+        await message.answer(
+            "❌ Login topilmadi",
+            reply_markup=login_menu()
+        )
+
 
 # ================= POST JOYLASH =================
 
@@ -1135,6 +1142,7 @@ async def save_car(cb: CallbackQuery):
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
+
 
 
 
