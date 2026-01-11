@@ -1,8 +1,14 @@
-from config import DB_PATH
-import sqlite3
+import os
+import psycopg2
+from psycopg2.extras import RealDictCursor
+
+DATABASE_URL = os.getenv("postgresql://postgres:FMGmkhnZAhcDMkFfLYVBwsGBcrLGEffF@postgres.railway.internal:5432/railway")
 
 def get_db():
-    return sqlite3.connect(DB_PATH)
+    return psycopg2.connect(
+        DATABASE_URL,
+        cursor_factory=RealDictCursor
+    )
 
 def init_db():
     conn = get_db()
@@ -56,3 +62,4 @@ def init_db():
 
     conn.commit()
     conn.close()
+
