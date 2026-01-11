@@ -1,6 +1,7 @@
 import json
 import time
 from database import get_db
+from database import get_db
 
 def load_profiles():
     conn = get_db()
@@ -76,3 +77,4 @@ def save_profiles(profiles: dict):
 
     conn.commit()
     conn.close()
+
