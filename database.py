@@ -63,19 +63,23 @@ def init_db():
     );
     """)
 
+    # MASHINA SAQLASH
     cur.execute("""
     CREATE TABLE IF NOT EXISTS cars (
         id SERIAL PRIMARY KEY,
-        user_id BIGINT NOT NULL,
+        user_id TEXT NOT NULL,
         brand TEXT NOT NULL,
-        number TEXT NOT NULL,
-        created_at TIMESTAMP DEFAULT NOW()
-)
-""")
+        color TEXT NOT NULL,
+        fuel TEXT NOT NULL,
+        plate TEXT NOT NULL,
+        created_at BIGINT
+    );
+    """)
 
     conn.commit()
     cur.close()
     conn.close()
+
 
 
 
