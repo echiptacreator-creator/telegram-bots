@@ -287,6 +287,25 @@ async def check_login_handler(message: Message):
             reply_markup=login_menu()
         )
 
+@dp.message(F.text == "🚪 Chiqish")
+async def logout_handler(message: Message):
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute(
+        "DELETE FROM authorized_users WHERE user_id = %s",
+        (str(message.from_user.id),)
+    )
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    await message.answer(
+        "🚪 Tizimdan chiqdingiz",
+        reply_markup=login_menu()
+    )
+
 
 # ================= POST JOYLASH =================
 
