@@ -10,17 +10,11 @@ from flask import Flask
 import os
 from flask import Flask, send_from_directory
 
-app = Flask(__name__, static_folder="static")
-
 from telethon.errors import (
     PhoneCodeInvalidError,
     SessionPasswordNeededError,
     FloodWaitError,
     PhoneNumberInvalidError)
-
-@app.route("/")
-def home():
-    return "OK - Login server ishlayapti"
 
 API_ID = 25780325
 API_HASH = "2c4cb6eee01a46dc648114813042c453"
@@ -196,25 +190,22 @@ def notify_bot_sync(user_id):
 
     loop.close()
 
-def run():
-    import os
-
-    if __name__ == "__main__":
-        port = int(os.environ.get("PORT", 5000))
-        app.run(host="0.0.0.0", port=port)
-        
-
-@app.route("/miniapp")
-def miniapp():
-    return send_from_directory("static", "index.html")
 
 @app.route("/")
 def index():
-    return "OK"
+    return "OK, LOGIN SERVER ISHLAYAPTI"
+
+@app.route("/miniapp")
+def miniapp():
+    return render_template("login.html")
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8080)
 
 
 if __name__ == "__main__":
     run()
+
 
 
 
