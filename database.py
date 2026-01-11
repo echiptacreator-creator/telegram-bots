@@ -1,7 +1,7 @@
 import os
 import psycopg2
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_URL = postgresql://postgres:NYAqiJIPBhXMDpQvXMIPJsMzWHvxlANg@nozomi.proxy.rlwy.net:45685/railway
 
 def get_db():
     if not DATABASE_URL:
@@ -77,6 +77,7 @@ def init_db():
     conn.commit()
     cur.close()
     conn.close()
+
 
 
 
