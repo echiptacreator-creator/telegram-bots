@@ -179,15 +179,10 @@ function show(stepId) {
 
 // 📩 KOD YUBORISH
 async function sendCode() {
-    alert("SEND CODE BOSILDI"); // 👈 SHU MUHIM
-    
     const phone = document.getElementById("phone").value.trim();
-    if (!phone) {
-        alert("Telefon yo‘q");
-        return;
-    }
+    if (!phone) return alert("Telefon kiriting");
 
-    const res = await fetch("https://telegram-bots-production-af1b.up.railway.app", {
+    const res = await fetch("/send_code", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({ phone })
@@ -201,17 +196,6 @@ async function sendCode() {
     }
 }
 
-
-    const data = await res.json();
-
-    if (data.status === "code_sent") {
-        show("codeStep");
-    } else if (data.status === "flood_wait") {
-        alert("Biroz kuting: " + data.seconds + " soniya");
-    } else {
-        alert("Xatolik: " + JSON.stringify(data));
-    }
-}
 // 📩 KOD TASDIQLASH
 async function verifyCode() {
     const codeInput = document.getElementById("code");
