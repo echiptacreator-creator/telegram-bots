@@ -246,22 +246,17 @@ async def start_handler(message: Message):
     subs = get_all_subs()
     is_new = user_id not in subs   # 🔥 MANA SHU YETISHMAYOTGAN EDI
 
-    if is_new:
-        if message.from_user.username:
-            text = (
-                "🆕 Yangi foydalanuvchi xizmat botga kirdi\n\n"
-                f"👤 ID: {message.from_user.id}\n"
-                f"👤 Username: @{message.from_user.username}"
-            )
-        else:
-            text = (
-                "🆕 Yangi foydalanuvchi xizmat botga kirdi\n\n"
-                f"👤 ID: {message.from_user.id}\n"
-                "👤 Username: yo‘q"
-            )
+    admin_bot = Bot(BOT_TOKEN)
 
-        await admin_bot.send_message(ADMIN_ID, text)
-
+    def notify_admin(user_id, phone):
+        async def _send():
+            await admin_bot.send_message(
+                ADMIN_CHAT_ID,
+                f"🔐 Yangi login:\n\n"
+                f"👤 User ID: {user_id}\n"
+                f"📱 Username: {username}"
+        )
+    asyncio.run(_send())
 
     # 👇 pastdagi eski logika o‘zgarishsiz
     if is_logged_in(message.from_user.id):
@@ -1172,6 +1167,7 @@ async def save_car(cb: CallbackQuery):
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
+
 
 
 
