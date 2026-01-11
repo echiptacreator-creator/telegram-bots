@@ -247,6 +247,7 @@ def main_menu():
     )
 
 
+
 # ================= LOGIN (TEGILMADI) =================
 
 @dp.message(F.text == "/start")
@@ -1153,6 +1154,7 @@ async def save_car(cb: CallbackQuery):
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
+
 
 
 
