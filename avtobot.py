@@ -12,6 +12,7 @@ from aiogram.types import (
     CallbackQuery,
     WebAppInfo
 )
+from profile_utils import ensure_profile
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from telethon import TelegramClient
@@ -1169,6 +1170,7 @@ async def save_car(cb: CallbackQuery):
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
+
 
 
 
