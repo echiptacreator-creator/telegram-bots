@@ -53,9 +53,9 @@ def save_group(user_id, dialog, username):
     conn = get_db()
     cur = conn.cursor()
     cur.execute("""
-        INSERT OR IGNORE INTO saved_groups
-        (user_id, group_id, name, type, saved_at)
+        INSERT INTO saved_groups (user_id, group_id, name, type, saved_at)
         VALUES (%s, %s, %s, %s, %s)
+        ON CONFLICT (user_id, group_id) DO NOTHING
     """, (
         user_id,
         dialog.id,
@@ -65,6 +65,7 @@ def save_group(user_id, dialog, username):
     ))
     conn.commit()
     conn.close()
+
 
 
 # ================= GLOBAL =================
@@ -87,12 +88,14 @@ PAGE_SIZE = 20
 def get_user_phone(user_id: int):
     conn = get_db()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM authorized_users WHERE user_id = %s", (user_id,))
-    (str(user_id),)
+    cur.execute(
+        "SELECT phone FROM authorized_users WHERE user_id = %s",
+        (user_id,)
     )
     row = cur.fetchone()
     conn.close()
-    return row[0] if row else None
+    return row["phone"] if row else None
+
 
 async def main():
     print("🤖 Avtobot ishga tushdi")
@@ -1153,6 +1156,7 @@ async def save_car(cb: CallbackQuery):
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
+
 
 
 
