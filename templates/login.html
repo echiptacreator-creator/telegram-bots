@@ -207,16 +207,14 @@ async function sendCode() {
     });
 
     const data = await res.json();
-    console.log("send_code:", data);
 
     if (data.status === "code_sent") {
         show("codeStep");
-    } else if (data.status === "flood_wait") {
-        showMessage("error", "Juda ko‘p urinish. " + data.seconds + " soniya kuting");
     } else {
         showMessage("error", "Kod yuborilmadi");
     }
 }
+
 
     const data = await res.json();
 
@@ -251,10 +249,9 @@ async function verifyCode() {
     });
 
     const data = await res.json();
-    console.log("verify_code:", data);
 
     if (data.status === "success") {
-        showMessage("success", "Muvaffaqiyatli login");
+        showMessage("success", "Kirish muvaffaqiyatli");
         Telegram.WebApp.close();
     } else if (data.status === "2fa_required") {
         show("passwordStep");
@@ -262,6 +259,7 @@ async function verifyCode() {
         showMessage("error", "Kod noto‘g‘ri");
     }
 }
+
 
     const data = await res.json();
 
