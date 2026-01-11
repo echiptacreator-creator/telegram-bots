@@ -833,7 +833,7 @@ async def join_catalog_group(cb: CallbackQuery):
             cur = conn.cursor()
             cur.execute("""
                 SELECT user_id FROM saved_groups
-                WHERE group_id = ?
+                WHERE group_id = %s
                 LIMIT 1
             """, (group_id,))
             row = cur.fetchone()
@@ -1153,6 +1153,7 @@ async def save_car(cb: CallbackQuery):
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
+
 
 
 
