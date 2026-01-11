@@ -36,7 +36,8 @@ def init_db():
     CREATE TABLE IF NOT EXISTS authorized_users (
         user_id BIGINT PRIMARY KEY,
         phone TEXT
-    )
+        created_at TIMESTAMP DEFAULT NOW()
+    );
     """)
 
     # === SAVED GROUPS ===
@@ -64,4 +65,5 @@ def init_db():
     conn.commit()
     cur.close()
     conn.close()
+
 
