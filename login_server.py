@@ -1,7 +1,3 @@
-
-API_ID = 25780325
-API_HASH = "2c4cb6eee01a46dc648114813042c453"
-
 import os
 import asyncio
 from flask import Flask, request, jsonify, render_template
@@ -136,9 +132,12 @@ def finalize_login(client, phone):
     conn = get_db()
     cur = conn.cursor()
     cur.execute("""
-        INSERT OR REPLACE INTO authorized_users (user_id, phone)
-        VALUES (?, ?)
+        INSERT INTO authorized_users (user_id, phone)
+        VALUES (%s, %s)
+        ON CONFLICT (user_id)
+        DO UPDATE SET phone = EXCLUDED.phone
     """, (user_id, phone))
+    )
     conn.commit()
     conn.close()
 
@@ -160,4 +159,5 @@ def finalize_login(client, phone):
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
+
 
