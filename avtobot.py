@@ -252,10 +252,10 @@ def main_menu():
 
 @dp.message(F.text == "/start")
 async def start_handler(message: Message):
-    await message.answer(
-        "👋 Xush kelibsiz!",
-        reply_markup=main_menu()
-    )
+    user_id = str(message.from_user.id)
+
+    subs = get_all_subs()
+    is_new = user_id not in subs   # 🔥 MANA SHU YETISHMAYOTGAN EDI
 
     if is_new:
         if message.from_user.username:
@@ -272,6 +272,7 @@ async def start_handler(message: Message):
             )
 
         await admin_bot.send_message(ADMIN_ID, text)
+
 
     # 👇 pastdagi eski logika o‘zgarishsiz
     if is_logged_in(message.from_user.id):
@@ -1152,6 +1153,7 @@ async def save_car(cb: CallbackQuery):
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
+
 
 
 
