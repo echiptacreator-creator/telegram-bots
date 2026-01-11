@@ -21,12 +21,10 @@ def load_stats():
 def add_post_stat(user_id):
     conn = get_db()
     cur = conn.cursor()
-    cur.execute("""
-        INSERT INTO user_stats (user_id, posts_sent)
-        VALUES (%s, 1)
-        ON CONFLICT(user_id)
-        DO UPDATE SET posts_sent = posts_sent + 1
-    """, (user_id,))
+    cur.execute(
+        "INSERT INTO post_stats (user_id, created_at) VALUES (%s, extract(epoch from now()))",
+        (user_id,)
+    )
     conn.commit()
     conn.close()
 
@@ -42,4 +40,5 @@ def add_group_stat(user_id):
     """, (user_id,))
     conn.commit()
     conn.close()
+
 
