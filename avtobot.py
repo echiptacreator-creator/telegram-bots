@@ -88,7 +88,7 @@ def get_user_phone(user_id: int):
     conn = get_db()
     cur = conn.cursor()
     cur.execute("SELECT * FROM authorized_users WHERE user_id = %s", (user_id,))
-        (str(user_id),)
+    (str(user_id),)
     )
     row = cur.fetchone()
     conn.close()
@@ -1153,6 +1153,7 @@ async def save_car(cb: CallbackQuery):
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
+
 
 
 
