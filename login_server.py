@@ -8,7 +8,10 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from telethon.sync import TelegramClient
 from flask import Flask
 import os
-from flask import Flask, send_from_directory
+from flask import Flask, render_template, request, jsonify
+
+# 🔴 ENG MUHIM QATOR — ENG TEPADA BO‘LSIN
+app = Flask(__name__, template_folder="templates")
 
 from telethon.errors import (
     PhoneCodeInvalidError,
@@ -190,7 +193,6 @@ def notify_bot_sync(user_id):
 
     loop.close()
 
-
 @app.route("/")
 def index():
     return "OK, LOGIN SERVER ISHLAYAPTI"
@@ -199,12 +201,22 @@ def index():
 def miniapp():
     return render_template("login.html")
 
+# (keyinchalik auth uchun)
+@app.route("/auth", methods=["POST"])
+def auth():
+    data = request.json
+    return jsonify({"ok": True})
+
+# =========================
+# RUN
+# =========================
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
 
 
 if __name__ == "__main__":
     run()
+
 
 
 
