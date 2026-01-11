@@ -25,6 +25,9 @@ from collections import defaultdict
 from subscription_db import get_all_subs
 from config import PRICE
 from database import get_db
+from database import init_db
+
+init_db()
 
 car_states = defaultdict(dict)
 
@@ -1151,6 +1154,7 @@ async def save_car(cb: CallbackQuery):
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
+
 
 
 
