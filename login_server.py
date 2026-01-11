@@ -188,8 +188,13 @@ def notify_bot_sync(user_id):
     loop.close()
 
 def run():
-    print("🔐 Login server + 2FA running on http://localhost:9000")
-    HTTPServer(("0.0.0.0", 9000), LoginHandler).serve_forever()
+    import os
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 9000))
+    app.run(host="0.0.0.0", port=port)
+
 
 if __name__ == "__main__":
     run()
+
