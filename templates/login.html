@@ -200,7 +200,7 @@ async function sendCode() {
 
     phoneValue = phone;
 
-    fetch("/send_code", {
+    const res = await fetch("/send_code", {
         method: "POST",
         headers: {
         "Content-Type": "application/json"
@@ -239,20 +239,18 @@ async function verifyCode() {
         return;
     }
 
-    fetch("/verify_code", {
+    const res = await fetch("/send_code", {
         method: "POST",
         headers: {
-        "Content-Type": "application/json"
+            "Content-Type": "application/json"
         },
         body: JSON.stringify({
-        phone: phone,
-        code: code
+            phone: phone
         })
-
-
     });
 
     const data = await res.json();
+
     
     if (data.status === "success") {
         showMessage("success", "Tizimga muvaffaqiyatli kirdingiz");
