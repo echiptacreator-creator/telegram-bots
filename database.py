@@ -63,9 +63,20 @@ def init_db():
     );
     """)
 
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS cars (
+        id SERIAL PRIMARY KEY,
+        user_id BIGINT NOT NULL,
+        brand TEXT NOT NULL,
+        number TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW()
+)
+""")
+
     conn.commit()
     cur.close()
     conn.close()
+
 
 
 
