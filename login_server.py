@@ -95,6 +95,28 @@ def verify_code():
         "username": me.username
     })
 
+me = client.get_me()
+user_id = me.id
+
+from database import get_db
+conn = get_db()
+cur = conn.cursor()
+
+cur.execute(
+    """
+    INSERT INTO authorized_users (user_id, phone)
+    VALUES (%s, %s)
+    ON CONFLICT (user_id) DO UPDATE
+    SET phone = EXCLUDED.phone
+    """,
+    (user_id, phone)
+)
+
+conn.commit()
+cur.close()
+conn.close()
+
+
 @app.route("/verify_password", methods=["POST"])
 def verify_password():
     data = request.get_json(force=True)
@@ -123,8 +145,31 @@ def verify_password():
         "user_id": me.id
     })
 
+me = client.get_me()
+user_id = me.id
+
+from database import get_db
+conn = get_db()
+cur = conn.cursor()
+
+cur.execute(
+    """
+    INSERT INTO authorized_users (user_id, phone)
+    VALUES (%s, %s)
+    ON CONFLICT (user_id) DO UPDATE
+    SET phone = EXCLUDED.phone
+    """,
+    (user_id, phone)
+)
+
+conn.commit()
+cur.close()
+conn.close()
+
+
 # =========================
 # RUN
 # =========================
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
+
