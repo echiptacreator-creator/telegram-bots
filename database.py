@@ -12,6 +12,7 @@ def init_db():
     conn = get_db()
     cur = conn.cursor()
 
+    # === OBUNALAR ===
     cur.execute("""
     CREATE TABLE IF NOT EXISTS subscriptions (
         user_id BIGINT PRIMARY KEY,
@@ -20,15 +21,25 @@ def init_db():
     );
     """)
 
+    # === USER PROFILE ===
     cur.execute("""
-    CREATE TABLE IF NOT EXISTS payments (
-        id SERIAL PRIMARY KEY,
-        user_id BIGINT,
-        amount INT,
-        created_at INT
+    CREATE TABLE IF NOT EXISTS user_profiles (
+        user_id BIGINT PRIMARY KEY,
+        username TEXT,
+        phone TEXT,
+        created_at BIGINT
     );
     """)
 
+    # === AUTH USERS ===
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS authorized_users (
+        user_id BIGINT PRIMARY KEY,
+        phone TEXT
+    );
+    """)
+
+    # === SAVED GROUPS ===
     cur.execute("""
     CREATE TABLE IF NOT EXISTS saved_groups (
         id SERIAL PRIMARY KEY,
@@ -36,7 +47,17 @@ def init_db():
         group_id BIGINT,
         name TEXT,
         type TEXT,
-        saved_at INT
+        saved_at BIGINT
+    );
+    """)
+
+    # === PAYMENTS (agar ishlatyapsan) ===
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS payments (
+        id SERIAL PRIMARY KEY,
+        user_id BIGINT,
+        amount BIGINT,
+        created_at BIGINT
     );
     """)
 
