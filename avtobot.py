@@ -432,7 +432,16 @@ async def choose_mode(message: Message):
         "⏳ Guruhlar yuklanmoqda, iltimos kuting..."
     )
 
-    client = await get_client(user_id)
+    try:
+        client = await get_client(user_id)
+    except Exception:
+        await message.answer(
+            "❌ Telegram akkauntingiz ulanmagan.\n\n"
+            "👉 Iltimos, avval Telegram login qiling.",
+            reply_markup=check_login_menu()
+        )
+        return
+
 
     dialogs = []  # 🔥 ASOSIY RO‘YXAT
 
@@ -1215,6 +1224,7 @@ async def save_car(cb: CallbackQuery):
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
+
 
 
 
