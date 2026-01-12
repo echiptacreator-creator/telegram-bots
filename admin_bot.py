@@ -57,7 +57,6 @@ def is_admin(message: Message) -> bool:
 async def start_handler(message: Message):
     user_id = str(message.from_user.id)
     username = message.from_user.first_name
-    subs = get_all_subs()
 
     # 1️⃣ ADMIN
     if message.from_user.id == ADMIN_ID:
@@ -77,8 +76,7 @@ async def start_handler(message: Message):
         )
         return
 
-    
-    # 2️⃣ LOGIN QILMAGAN
+    # 2️⃣ LOGIN QILMAGAN FOYDALANUVCHI
     if not is_logged_in_user(user_id):
         await message.answer(
             "❌ Siz hali xizmat botdan login qilmagansiz.\n\n"
@@ -101,6 +99,7 @@ async def start_handler(message: Message):
         f"👋 Assalomu alaykum, {username}!\n\n"
         "📌 Sizda faol obuna mavjud."
     )
+
 
 # 📸 FOYDALANUVCHI CHEK YUBORSA
 @dp.message(F.photo)
@@ -548,6 +547,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
