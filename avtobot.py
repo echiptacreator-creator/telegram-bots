@@ -58,18 +58,22 @@ def can_use_bot(user_id: int) -> bool:
 
 
 
+
+
 user_clients = {}
 
 async def get_client(user_id: int) -> TelegramClient:
     user_id = str(user_id)
 
+    os.makedirs(SESSIONS_DIR, exist_ok=True)
+
+    session_file = os.path.join(SESSIONS_DIR, f"{user_id}.session")
+
     if user_id in user_clients:
         return user_clients[user_id]
 
-    session_path = os.path.join(SESSIONS_DIR, user_id)
-
     client = TelegramClient(
-        session_path,
+        session_file,
         API_ID,
         API_HASH
     )
@@ -77,10 +81,12 @@ async def get_client(user_id: int) -> TelegramClient:
     await client.connect()
 
     if not await client.is_user_authorized():
-        raise Exception("Telegram session topilmadi")
+        await client.disconnect()
+        raise Exception("Telegram login qilinmagan")
 
     user_clients[user_id] = client
     return client
+
 
 
 def mark_free_used(user_id: int):
@@ -1209,6 +1215,7 @@ async def save_car(cb: CallbackQuery):
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
+
 
 
 
