@@ -19,6 +19,8 @@ from database import init_db
 from config import PRICE
 from database import get_db
 from subscription_db import get_all_subs, update_subscription
+from subscription_db import activate_subscription
+
 
 
 
@@ -158,8 +160,7 @@ async def receive_receipt(message: Message):
 async def approve_payment(call: CallbackQuery):
     user_id = call.data.split(":")[1]
 
-    # 1️⃣ OBUNANI YOQISH (sening mavjud funksiyang)
-    update_subscription(user_id, "active")
+    activate_subscription(user_id)
 
     # 2️⃣ USERGA XABAR
     await bot.send_message(
@@ -508,6 +509,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
