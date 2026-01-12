@@ -146,6 +146,12 @@ CACHE_TTL = 300  # 5 daqiqa
 
 PAGE_SIZE = 20
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+SESSIONS_DIR = os.path.join(BASE_DIR, "sessions")
+
+os.makedirs(SESSIONS_DIR, exist_ok=True)
+
+
 # ================= HELPERS =================
 
 def is_logged_in(user_id):
@@ -1203,6 +1209,7 @@ async def save_car(cb: CallbackQuery):
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
+
 
 
 
