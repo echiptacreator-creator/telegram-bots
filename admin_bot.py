@@ -52,25 +52,23 @@ def is_admin(message: Message) -> bool:
 async def start_handler(message: Message):
     user_id = str(message.from_user.id)
     username = message.from_user.first_name
-
     subs = get_all_subs()
+
     # 1️⃣ ADMIN
     if message.from_user.id == ADMIN_ID:
-        await message.answer(
-            f"👋 Assalomu alaykum, {username}!\n\n"
-            "Admin panelga xush kelibsiz.\n"
-            "📥 Cheklarni shu bot orqali qabul qilasiz."
+        kb = ReplyKeyboardMarkup(
+            keyboard=[
+                [KeyboardButton(text="🧾 Kutilayotgan to‘lovlar")],
+                [KeyboardButton(text="🟢 Faol obunalar")],
+                [KeyboardButton(text="🔴 Bloklangan obunalar")],
+                [KeyboardButton(text="📊 Hisobotlar")],
+            ],
+            resize_keyboard=True
         )
-        return
-      
-
-    # 2️⃣ MIJOZ (subscriptions.json’da BOR)
-    if user_id in subs:
         await message.answer(
             f"👋 Assalomu alaykum, {username}!\n\n"
-            "💳 To‘lovni amalga oshirib,\n"
-            "to‘lov chekini shu botga yuboring.\n\n"
-            "Tekshiruvdan so‘ng xizmat avtomatik ochiladi."
+            "Admin panelga xush kelibsiz.",
+            reply_markup=kb
         )
         return
 
@@ -79,21 +77,7 @@ async def start_handler(message: Message):
         "❌ Siz ro‘yxatdan o‘tmagansiz.\n\n"
         "👉 Avval xizmat botga kirib /start bosing."
     )
-    if message.from_user.id == ADMIN_ID:
-        kb = ReplyKeyboardMarkup(
-            keyboard=[
-                [KeyboardButton(text="🧾 Kutilayotgan to‘lovlar")],
-                [KeyboardButton(text="🟢 Faol obunalar")],
-                [KeyboardButton(text="🔴 Bloklangan obunalar")],
-                [KeyboardButton(text="📊 Hisobotlar")]
-            ],
-            resize_keyboard=True
-        )
-        await message.answer(
-            f"👋 Assalomu alaykum, {username}!",
-            reply_markup=kb
-        )
-        return
+            return
 
 
 # 📸 FOYDALANUVCHI CHEK YUBORSA
@@ -540,3 +524,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
