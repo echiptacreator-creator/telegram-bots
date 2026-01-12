@@ -136,6 +136,7 @@ async def receive_receipt(message: Message):
         "🧾 Yangi to‘lov cheki\n\n"
         f"👤 User ID: {user_id}\n"
         f"👤 Ism: {username}"
+        f"📞 Tel: {phone}"
     )
 
     await bot.send_photo(
@@ -149,7 +150,6 @@ async def receive_receipt(message: Message):
         "✅ Chekingiz qabul qilindi.\n"
         "Admin tekshiruvdan so‘ng sizga xabar beradi."
     )
-
 
 
 # ✅ TO‘LOVNI TASDIQLASH
@@ -170,7 +170,6 @@ async def approve_payment(call: CallbackQuery):
     await call.message.answer("✅ To‘lov tasdiqlandi")
 
     await call.answer()
-
 
 
     from datetime import date, timedelta
@@ -507,6 +506,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
