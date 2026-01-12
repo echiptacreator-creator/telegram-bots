@@ -731,6 +731,7 @@ async def steps(message: Message):
             f"📊 Yuborildi: 0",
             reply_markup=buttons
         )
+        mark_free_used(message.from_user.id)
 
         campaign["status_message_id"] = msg.message_id
 
@@ -1192,6 +1193,7 @@ async def save_car(cb: CallbackQuery):
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
+
 
 
 
