@@ -57,6 +57,32 @@ def can_use_bot(user_id: int) -> bool:
     return False
 
 
+def can_use_bot(user_id: int) -> bool:
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT status, free_used
+        FROM subscriptions
+        WHERE user_id = %s
+    """, (user_id,))
+    row = cur.fetchone()
+    conn.close()
+
+    if not row:
+        return False
+
+    status, free_used = row
+
+    # 💳 To‘lov qilingan
+    if status == "active":
+        return True
+
+    # 🆓 1 martalik trial
+    if status == "trial" and free_used is False:
+        return True
+
+    return False
+
 
 
 
@@ -1224,6 +1250,7 @@ async def save_car(cb: CallbackQuery):
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
+
 
 
 
