@@ -471,6 +471,27 @@ async def user_payments_history(cb: CallbackQuery):
     await cb.message.edit_text(text)
     await cb.answer()
 
+def activate_subscription(user_id: str, days: int = 30):
+    from datetime import date, timedelta
+    from database import get_db
+
+    paid_until = date.today() + timedelta(days=days)
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT INTO subscriptions (user_id, paid_until, status)
+        VALUES (%s, %s, %s)
+        ON CONFLICT (user_id)
+        DO UPDATE SET
+            paid_until = EXCLUDED.paid_until,
+            status = EXCLUDED.status
+    """, (int(user_id), paid_until, "active"))
+
+    conn.commit()
+    conn.close()
+
 
 #========= MAIN ===========
 async def main():
@@ -479,6 +500,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
