@@ -1,3 +1,4 @@
+from datetime import date, timedelta
 from database import get_db
 
 def get_all_subs():
@@ -47,4 +48,5 @@ def activate_subscription(user_id: str, days: int = 30):
 
     conn.commit()
     conn.close()
+
 
