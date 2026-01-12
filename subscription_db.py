@@ -28,3 +28,23 @@ def update_subscription(user_id, status, paid_until=None):
     """, (status, paid_until, user_id))
     conn.commit()
     conn.close()
+
+def activate_subscription(user_id: str, days: int = 30):
+    start = date.today()
+    end = start + timedelta(days=days)
+
+    conn = get_db()
+    cur = conn.cursor()
+    # agar oldin bo‘lmasa — qo‘shadi, bo‘lsa — yangilaydi
+    cur.execute("""
+        INSERT INTO subscriptions (user_id, status, paid_until)
+        VALUES (%s, %s, %s)
+        ON CONFLICT (user_id)
+        DO UPDATE SET
+            status = EXCLUDED.status,
+            paid_until = EXCLUDED.paid_until
+    """, ("active", end, user_id))
+
+    conn.commit()
+    conn.close()
+
