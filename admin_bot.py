@@ -481,12 +481,11 @@ def activate_subscription(user_id: str, days: int = 30):
     cur = conn.cursor()
 
     cur.execute("""
-        INSERT INTO subscriptions (user_id, paid_until, status)
-        VALUES (%s, %s, %s)
-        ON CONFLICT (user_id)
-        DO UPDATE SET
-            paid_until = EXCLUDED.paid_until,
-            status = EXCLUDED.status
+        UPDATE subscriptions
+        SET status = 'active',
+            free_used = TRUE,
+            paid_until = %s
+        WHERE user_id = %s
     """, (int(user_id), paid_until, "active"))
 
     conn.commit()
@@ -500,6 +499,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
