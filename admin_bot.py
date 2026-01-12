@@ -394,28 +394,6 @@ async def active_subscriptions(message: Message):
             reply_markup=kb
         )
 
-def activate_subscription(user_id: str, days: int = 30):
-    from datetime import date, timedelta
-    from database import get_db
-
-    paid_until = date.today() + timedelta(days=days)
-
-    conn = get_db()
-    cur = conn.cursor()
-
-    cur.execute("""
-        INSERT INTO subscriptions (user_id, paid_until, status)
-        VALUES (%s, %s, %s)
-        ON CONFLICT (user_id)
-        DO UPDATE SET
-            paid_until = EXCLUDED.paid_until,
-            status = EXCLUDED.status
-    """, (int(user_id), paid_until, "active"))
-
-    conn.commit()
-    conn.close()
-
-
 
 @dp.callback_query(F.data.startswith("block_"))
 async def block_subscription(cb: CallbackQuery):
@@ -424,15 +402,16 @@ async def block_subscription(cb: CallbackQuery):
         return
 
     user_id = cb.data.split("_")[1]
-    subs = get_all_subs()
-    if user_id not in subs:
-        await cb.answer("Foydalanuvchi topilmadi", show_alert=True)
-        return
 
-    subs[user_id]["status"] = "blocked"
-    update_subscription(user_id, "rejected")
-
-
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("""
+        UPDATE subscriptions
+        SET status = %s
+        WHERE user_id = %s
+    """, ("blocked", int(user_id)))
+    conn.commit()
+    conn.close()
 
 
     # Admin uchun tasdiq
@@ -531,6 +510,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
