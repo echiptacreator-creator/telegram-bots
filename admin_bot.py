@@ -109,18 +109,20 @@ async def receive_receipt(message: Message):
     username = message.from_user.username
     first_name = message.from_user.first_name
 
-    subs = get_all_subs()
-    # 1️⃣ ADMIN rasm yuborsa — e’tiborsiz qoldiramiz
+    # 1️⃣ ADMIN rasm yuborsa — e’tiborsiz
     if message.from_user.id == ADMIN_ID:
         return
 
-    # 2️⃣ BEGONA foydalanuvchi
-    if user_id not in subs:
+    # 2️⃣ LOGIN QILMAGAN FOYDALANUVCHI
+    if not is_logged_in_user(user_id):
         await message.answer(
-            "❌ Siz ro‘yxatdan o‘tmagansiz.\n\n"
-            "👉 Avval xizmat botga /start bosing."
+            "❌ Siz hali xizmat botdan login qilmagansiz.\n\n"
+            "👉 Avval xizmat bot orqali login qiling."
         )
         return
+
+# 3️⃣ LOGIN QILGAN FOYDALANUVCHI — CHEK QABUL QILINADI
+
 
     # 3️⃣ MIJOZ — CHEKNI ADMINGA YUBORAMIZ
     caption = (
@@ -546,6 +548,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
