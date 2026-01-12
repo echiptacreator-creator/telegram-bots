@@ -30,31 +30,6 @@ from database import init_db
 from aiogram.filters import CommandStart
 init_db()
 
-def can_use_bot(user_id: int) -> bool:
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute("""
-        SELECT status, free_used
-        FROM subscriptions
-        WHERE user_id = %s
-    """, (user_id,))
-    row = cur.fetchone()
-    conn.close()
-
-    if not row:
-        return False
-
-    status, free_used = row
-
-    # 💳 To‘lov qilingan — cheksiz
-    if status == "active":
-        return True
-
-    # 🆓 1 martalik bepul
-    if status == "trial" and free_used is False:
-        return True
-
-    return False
 
 
 def can_use_bot(user_id: int) -> bool:
@@ -88,15 +63,8 @@ def can_use_bot(user_id: int) -> bool:
 
 user_clients = {}
 
-async def get_client(user_id: int) -> TelegramClient:
-    user_id = str(user_id)
-
-    os.makedirs(SESSIONS_DIR, exist_ok=True)
-
-    session_file = os.path.join(SESSIONS_DIR, f"{user_id}.session")
-
-    if user_id in user_clients:
-        return user_clients[user_id]
+async def get_client(user_id: int):
+    session_file = os.path.join(SESSIONS_DIR, str(user_id))
 
     client = TelegramClient(
         session_file,
@@ -110,9 +78,7 @@ async def get_client(user_id: int) -> TelegramClient:
         await client.disconnect()
         raise Exception("Telegram login qilinmagan")
 
-    user_clients[user_id] = client
     return client
-
 
 
 def mark_free_used(user_id: int):
@@ -1242,6 +1208,7 @@ async def save_car(cb: CallbackQuery):
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
+
 
 
 
