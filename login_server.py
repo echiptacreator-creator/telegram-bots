@@ -12,6 +12,25 @@ from aiogram import Bot
 from database import get_db, init_db
 import threading
 
+SESSIONS_DIR = "/app/sessions"
+
+async def get_client(user_id: int):
+    session_file = os.path.join(SESSIONS_DIR, str(user_id))
+
+    client = TelegramClient(
+        session_file,
+        API_ID,
+        API_HASH
+    )
+
+    await client.connect()
+
+    if not await client.is_user_authorized():
+        await client.disconnect()
+        raise Exception("Telegram login qilinmagan")
+
+    return client
+
 
 # ======================
 # CONFIG
@@ -248,6 +267,7 @@ def notify_admin(user_id: str, phone: str, username: str | None = None):
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
+
 
 
 
