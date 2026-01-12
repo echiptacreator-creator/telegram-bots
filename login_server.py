@@ -149,10 +149,11 @@ def verify_code():
         conn = get_db()
         cur = conn.cursor()
         cur.execute("""
-            INSERT INTO authorized_users (user_id)
-            VALUES (%s)
+            INSERT INTO subscriptions (user_id, status)
+            VALUES (%s, 'trial')
             ON CONFLICT (user_id) DO NOTHING
-        """, (user_id,))
+
+            """, (user_id,))
         conn.commit()
         conn.close()
 
@@ -247,6 +248,7 @@ def notify_admin(user_id: str, phone: str, username: str | None = None):
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
+
 
 
 
