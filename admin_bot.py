@@ -18,7 +18,6 @@ from stats_db import load_stats
 from database import init_db
 from config import PRICE
 from database import get_db
-from subscription_db import get_all_subs, update_subscription
 from subscription_db import activate_subscription
 
 
@@ -518,6 +517,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
