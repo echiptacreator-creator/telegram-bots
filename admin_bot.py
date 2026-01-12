@@ -131,22 +131,19 @@ async def receive_receipt(message: Message):
         + (f"👤 Username: @{username}\n" if username else "")
     )
 
-    keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text="✅ 30 kun tasdiqlash",
-                    callback_data=f"approve_30_{user_id}"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="❌ Rad etish",
-                    callback_data=f"reject_{user_id}"
-                )
-            ]
-        ]
-    )
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+    [
+        InlineKeyboardButton(
+            text="✅ 30 kunga tasdiqlash",
+            callback_data=f"approve:{user_id}"
+        ),
+        InlineKeyboardButton(
+            text="❌ Rad etish",
+            callback_data=f"reject:{user_id}"
+        )
+    ]
+])
+
 
     await bot.send_photo(
         ADMIN_ID,
@@ -163,8 +160,10 @@ async def receive_receipt(message: Message):
 
 
 # ✅ TO‘LOVNI TASDIQLASH
-@dp.callback_query(F.data.startswith("approve_30_"))
-async def approve_30(cb: CallbackQuery):
+@dp.callback_query(F.data.startswith("approve:"))
+async def approve_payment(call: CallbackQuery):
+    user_id = call.data.split(":")[1]
+
     if cb.from_user.id != ADMIN_ID:
         await cb.answer("Ruxsat yo‘q", show_alert=True)
         return
@@ -547,6 +546,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
