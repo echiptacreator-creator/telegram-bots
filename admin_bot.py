@@ -11,8 +11,6 @@ from aiogram.types import (
     InlineKeyboardMarkup,
     InlineKeyboardButton,
 )
-
-from subscription_db import get_all_subs,
 from payment_db import add_payment, load_payments
 from stats_db import load_stats
 from database import init_db
@@ -481,6 +479,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
