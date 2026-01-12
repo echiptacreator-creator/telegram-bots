@@ -222,35 +222,21 @@ async def approve_payment(call: CallbackQuery):
 
     await cb.answer()
 
-@dp.callback_query(F.data.startswith("reject_"))
-async def reject_payment(cb: CallbackQuery):
-    if cb.from_user.id != ADMIN_ID:
-        await cb.answer("Ruxsat yo‘q", show_alert=True)
-        return
+@dp.callback_query(F.data.startswith("reject:"))
+async def reject_payment(call: CallbackQuery):
+    user_id = call.data.split(":")[1]
 
-    user_id = cb.data.split("_")[1]
-
-    # 1️⃣ ADMIN UCHUN
-    await cb.message.answer(
-        "❌ TO‘LOV RAD ETILDI\n\n"
-        f"👤 User ID: {user_id}"
-    )
-
-    # 2️⃣ MIJOZGA – ADMIN BOTDAN
+    # 1️⃣ USERGA XABAR
     await bot.send_message(
-        int(user_id),
-        "❌ To‘lovingiz rad etildi.\n\n"
-        "Iltimos, to‘lovni tekshirib qayta yuboring."
+        chat_id=int(user_id),
+        text="❌ Siz yuborgan to‘lov cheki rad etildi.\nIltimos, to‘g‘ri chek yuboring."
     )
 
-    # 3️⃣ MIJOZGA – XIZMAT BOTDAN
-    await service_bot.send_message(
-        int(user_id),
-        "⛔ To‘lov tasdiqlanmadi.\n\n"
-        "Xizmatdan foydalanish vaqtincha bloklandi."
-    )
+    # 2️⃣ ADMIN CHATGA JAVOB
+    await call.message.answer("❌ To‘lov rad etildi")
 
-    await cb.answer("Rad etildi")
+    await call.answer()
+
 
 @dp.message(F.text == "📊 Hisobotlar")
 async def open_stats_from_menu(message: Message):
@@ -546,6 +532,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
