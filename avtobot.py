@@ -330,18 +330,6 @@ async def post_start(message: Message):
     if not can_use_bot(message.from_user.id):
         await message.answer(
             "❌ Bepul foydalanish limiti tugadi.\n\n"
-            "💳 Davom etish uchun to‘lov qiling."
-        )
-        return
-
-     # 🔐 OBUNA TEKSHIRUV (YANGI)
-   
-    subs = get_all_subs()
-    user = subs.get(str(message.from_user.id))
-
-    if not user or user["status"] != "active":
-
-        await message.answer(
             "❌ Xizmatdan foydalanish uchun obuna kerak.\n\n"
             f"💰 Narx: {PRICE} so‘m\n"
             "💳 Karta: 9860260107680035 I. Ibrohimov"
@@ -349,6 +337,7 @@ async def post_start(message: Message):
             "👉 To‘lov chekini @shafyoradminbot ga yuboring."
         )
         return
+    
     # 🔐 OBUNA TEKSHIRUV TUGADI
 
     keyboard = ReplyKeyboardMarkup(
@@ -787,14 +776,9 @@ async def run_campaign(user_id: int, campaign: dict):
 
 @dp.message(F.text == "📂 Guruhlar katalogi")
 async def show_group_catalog(message: Message):
-
-     # 🔐 OBUNA TEKSHIRUV (YANGI)
-    
-    subs = get_all_subs()
-    user = subs.get(str(message.from_user.id))
-
-    if not user or user["status"] != "active":
+    if not can_use_bot(message.from_user.id):
         await message.answer(
+            "❌ Bepul foydalanish limiti tugadi.\n\n"
             "❌ Xizmatdan foydalanish uchun obuna kerak.\n\n"
             f"💰 Narx: {PRICE} so‘m\n"
             "👉 To‘lov chekini @shafyoradminbot ga yuboring."
@@ -1193,6 +1177,7 @@ async def save_car(cb: CallbackQuery):
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
+
 
 
 
