@@ -397,7 +397,6 @@ async def post_start(message: Message):
             "❌ Xizmatdan foydalanish uchun obuna kerak.\n\n"
             f"💰 Narx: {PRICE} so‘m\n"
             "💳 Karta: 9860260107680035 I. Ibrohimov"
-
             "👉 To‘lov chekini @shafyoradminbot ga yuboring."
         )
         return
@@ -793,7 +792,7 @@ async def steps(message: Message):
             f"📊 Yuborildi: 0",
             reply_markup=buttons
         )
-        mark_free_used(message.from_user.id)
+            mark_free_used(message.from_user.id)
 
         campaign["status_message_id"] = msg.message_id
 
@@ -854,15 +853,7 @@ async def show_group_catalog(message: Message):
             "❌ Bepul foydalanish limiti tugadi.\n\n"
             "❌ Xizmatdan foydalanish uchun obuna kerak.\n\n"
             f"💰 Narx: {PRICE} so‘m\n"
-            "👉 To‘lov chekini @shafyoradminbot ga yuboring."
-        )
-        return
-
-        await message.answer(
-            "❌ Xizmatdan foydalanish uchun obuna kerak.\n\n"
-            f"💰 Narx: {PRICE} so‘m\n"
             "💳 Karta: 9860260107680035 I. Ibrohimov"
-            
             "👉 To‘lov chekini @shafyoradminbot ga yuboring."
         )
         return
@@ -950,7 +941,7 @@ async def join_catalog_group(cb: CallbackQuery):
             await cb.message.answer(
                 "🔒 Bu guruh yopiq (private).\n"
                 "Taklif havolasi topilmadi."
-            )
+            )    mark_free_used(message.from_user.id)
 
 
 
@@ -1250,6 +1241,7 @@ async def save_car(cb: CallbackQuery):
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
+
 
 
 
