@@ -1,34 +1,25 @@
 import asyncio
+import time
+from datetime import date, timedelta
 from aiogram import Bot, Dispatcher, F
 from aiogram.filters import CommandStart
-from subscription_db import get_all_subs, update_subscription
-from datetime import date, timedelta
-from aiogram.types import Message, CallbackQuery
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.types import (
     Message,
     CallbackQuery,
+    ReplyKeyboardMarkup,
+    KeyboardButton,
     InlineKeyboardMarkup,
     InlineKeyboardButton,
-    ReplyKeyboardMarkup,
-    KeyboardButton
 )
-from stats_db import load_stats
-from aiogram.filters import CommandStart
-from aiogram import Bot, Dispatcher, F
-from aiogram.types import CallbackQuery
-from aiogram import F
-import time
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+
+from subscription_db import get_all_subs, update_subscription
 from payment_db import add_payment, load_payments
+from stats_db import load_stats
 from database import init_db
 from config import PRICE
-from database import get_db
+
 
 init_db()
-
-from datetime import date
 
 def days_left(user):
     if not user.get("paid_until"):
@@ -554,6 +545,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
