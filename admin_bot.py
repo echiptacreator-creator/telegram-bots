@@ -186,12 +186,12 @@ def approve_subscription(user_id: str, amount: int, period_days: int):
         VALUES (%s, %s, %s, TRUE)
     """, (user_id, amount, period_days))
 
-    # 2️⃣ subscription
+    # 2️⃣ subscription (FAOLLASHTIRISH)
     cur.execute("""
         UPDATE subscriptions
         SET status=%s, paid_until=%s
         WHERE user_id=%s
-    """, (status, paid_until, user_id))
+    """, ("active", end, user_id))
 
     conn.commit()
     conn.close()
@@ -506,6 +506,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
