@@ -32,13 +32,13 @@ init_db()
 
 car_states = defaultdict(dict)
 
-def has_active_subscription(user_id: int) -> bool:
+def can_use_bot(user_id: int) -> bool:
     conn = get_db()
     cur = conn.cursor()
     cur.execute("""
-        SELECT paid_until
+        SELECT status, free_used
         FROM subscriptions
-        WHERE user_id = %s AND status = 'active'
+        WHERE user_id = %s
     """, (user_id,))
     row = cur.fetchone()
     conn.close()
@@ -46,8 +46,18 @@ def has_active_subscription(user_id: int) -> bool:
     if not row:
         return False
 
-    paid_until = row[0]
-    return paid_until >= date.today()
+    status, free_used = row
+
+    # 🔓 to‘lov qilingan — cheksiz
+    if status == "active":
+        return True
+
+    # 🆓 bepul 1 martalik
+    if status == "trial" and free_used is False:
+        return True
+
+    return False
+
 
 
 # ================= CONFIG =================
@@ -1165,6 +1175,7 @@ async def save_car(cb: CallbackQuery):
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
+
 
 
 
