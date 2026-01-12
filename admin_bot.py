@@ -317,8 +317,16 @@ async def pending_payments(message: Message):
     if message.from_user.id != ADMIN_ID:
         return
 
-    subs = get_all_subs()
-    pending = {uid: u for uid, u in subs.items() if u["status"] == "pending"}
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("""
+        INSERT INTO subscriptions (user_id, status)
+        VALUES (%s, %s)
+        ON CONFLICT (user_id)
+        DO UPDATE SET status = %s
+    """, (int(user_id), "pending", "pending"))
+    conn.commit()
+    conn.close()
 
 
     if not pending:
@@ -510,6 +518,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
