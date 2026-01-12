@@ -30,8 +30,6 @@ from database import init_db
 from aiogram.filters import CommandStart
 init_db()
 
-car_states = defaultdict(dict)
-
 def can_use_bot(user_id: int) -> bool:
     conn = get_db()
     cur = conn.cursor()
@@ -48,16 +46,29 @@ def can_use_bot(user_id: int) -> bool:
 
     status, free_used = row
 
-    # 🔓 to‘lov qilingan — cheksiz
+    # 💳 To‘lov qilingan — cheksiz
     if status == "active":
         return True
 
-    # 🆓 bepul 1 martalik
+    # 🆓 1 martalik bepul
     if status == "trial" and free_used is False:
         return True
 
     return False
 
+
+def mark_free_used(user_id: int):
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("""
+        UPDATE subscriptions
+        SET free_used = TRUE,
+            status = 'blocked'
+        WHERE user_id = %s
+          AND status = 'trial'
+    """, (user_id,))
+    conn.commit()
+    conn.close()
 
 
 # ================= CONFIG =================
@@ -316,6 +327,12 @@ async def logout_handler(message: Message):
 
 @dp.message(F.text == "➕ Xabar yuborish")
 async def post_start(message: Message):
+        if not can_use_bot(message.from_user.id):
+        await message.answer(
+            "❌ Bepul foydalanish limiti tugadi.\n\n"
+            "💳 Davom etish uchun to‘lov qiling."
+        )
+        return
 
      # 🔐 OBUNA TEKSHIRUV (YANGI)
    
@@ -1175,6 +1192,7 @@ async def save_car(cb: CallbackQuery):
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
+
 
 
 
