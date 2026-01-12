@@ -24,6 +24,8 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from payment_db import add_payment, load_payments
 from database import init_db
 from config import PRICE
+from database import get_db
+
 init_db()
 
 from datetime import date
@@ -42,6 +44,17 @@ service_bot = Bot(SERVICE_BOT_TOKEN)
 
 bot = Bot(ADMIN_BOT_TOKEN)
 dp = Dispatcher()
+
+def is_logged_in_user(user_id: str) -> bool:
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT 1 FROM authorized_users WHERE user_id = %s",
+        (user_id,)
+    )
+    exists = cur.fetchone() is not None
+    conn.close()
+    return exists
 
 
 def is_admin(message: Message) -> bool:
@@ -72,12 +85,30 @@ async def start_handler(message: Message):
         )
         return
 
-    # 3️⃣ BEGONA
-    await message.answer(
-        "❌ Siz ro‘yxatdan o‘tmagansiz.\n\n"
-        "👉 Avval xizmat botga kirib /start bosing."
-    )
+    
+    # 2️⃣ LOGIN QILMAGAN
+    if not is_logged_in_user(user_id):
+        await message.answer(
+            "❌ Siz hali xizmat botdan login qilmagansiz.\n\n"
+            "👉 Avval xizmat botga kirib login qiling."
+        )
+        return
 
+    # 3️⃣ LOGIN QILGAN, LEKIN OBUNA YO‘Q
+    subs = get_all_subs()
+    if user_id not in subs:
+        await message.answer(
+            f"👋 Assalomu alaykum, {username}!\n\n"
+            "💳 Siz bu bot orqali tizimga to‘lovni amalga oshirasiz.\n"
+            "Iltimos, to‘lov chekini rasm sifatida yuboring."
+        )
+        return
+
+    # 4️⃣ LOGIN + OBUNA BOR
+    await message.answer(
+        f"👋 Assalomu alaykum, {username}!\n\n"
+        "📌 Sizda faol obuna mavjud."
+    )
 
 # 📸 FOYDALANUVCHI CHEK YUBORSA
 @dp.message(F.photo)
@@ -523,5 +554,6 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
