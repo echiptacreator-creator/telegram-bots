@@ -77,7 +77,6 @@ async def start_handler(message: Message):
         "❌ Siz ro‘yxatdan o‘tmagansiz.\n\n"
         "👉 Avval xizmat botga kirib /start bosing."
     )
-            return
 
 
 # 📸 FOYDALANUVCHI CHEK YUBORSA
@@ -524,4 +523,5 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
