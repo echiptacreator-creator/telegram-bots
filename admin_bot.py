@@ -105,58 +105,51 @@ async def start_handler(message: Message):
 @dp.message(F.photo)
 async def receive_receipt(message: Message):
     user_id = str(message.from_user.id)
-    username = message.from_user.username
-    first_name = message.from_user.first_name
+    username = message.from_user.first_name
 
-    # 1️⃣ ADMIN rasm yuborsa — e’tiborsiz
+    # ADMIN rasm yuborsa — o‘tkazib yuboramiz
     if message.from_user.id == ADMIN_ID:
         return
 
-    # 2️⃣ LOGIN QILMAGAN FOYDALANUVCHI
+    # LOGIN QILMAGAN USER
     if not is_logged_in_user(user_id):
         await message.answer(
-            "❌ Siz hali xizmat botdan login qilmagansiz.\n\n"
-            "👉 Avval xizmat bot orqali login qiling."
+            "❌ Siz hali xizmat botdan login qilmagansiz."
         )
         return
 
-# 3️⃣ LOGIN QILGAN FOYDALANUVCHI — CHEK QABUL QILINADI
+    # ADMIN UCHUN TUGMALAR
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(
+                text="✅ Tasdiqlash",
+                callback_data=f"approve:{user_id}"
+            ),
+            InlineKeyboardButton(
+                text="❌ Rad etish",
+                callback_data=f"reject:{user_id}"
+            )
+        ]
+    ])
 
-
-    # 3️⃣ MIJOZ — CHEKNI ADMINGA YUBORAMIZ
     caption = (
-        "📥 Yangi to‘lov cheki\n\n"
-        f"👤 ID: {user_id}\n"
-        f"👤 Ism: {first_name}\n"
-        + (f"👤 Username: @{username}\n" if username else "")
+        "🧾 Yangi to‘lov cheki\n\n"
+        f"👤 User ID: {user_id}\n"
+        f"👤 Ism: {username}"
     )
-
-    kb = InlineKeyboardMarkup(inline_keyboard=[
-    [
-        InlineKeyboardButton(
-            text="✅ 30 kunga tasdiqlash",
-            callback_data=f"approve:{user_id}"
-        ),
-        InlineKeyboardButton(
-            text="❌ Rad etish",
-            callback_data=f"reject:{user_id}"
-        )
-    ]
-])
-
 
     await bot.send_photo(
         ADMIN_ID,
-        message.photo[-1].file_id,
+        photo=message.photo[-1].file_id,
         caption=caption,
         reply_markup=keyboard
     )
 
-    # 4️⃣ MIJOZGA JAVOB
     await message.answer(
         "✅ Chekingiz qabul qilindi.\n"
-        "Tekshiruvdan so‘ng sizga xabar beriladi."
+        "Admin tekshiruvdan so‘ng sizga xabar beradi."
     )
+
 
 
 # ✅ TO‘LOVNI TASDIQLASH
@@ -514,6 +507,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
