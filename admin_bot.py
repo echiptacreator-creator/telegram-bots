@@ -136,7 +136,6 @@ async def receive_receipt(message: Message):
         "🧾 Yangi to‘lov cheki\n\n"
         f"👤 User ID: {user_id}\n"
         f"👤 Ism: {username}"
-        f"📞 Tel: {phone}"
     )
 
     await bot.send_photo(
@@ -189,9 +188,10 @@ def approve_subscription(user_id: str, amount: int, period_days: int):
 
     # 2️⃣ subscription
     cur.execute("""
-        INSERT INTO subscriptions (user_id, start_date, end_date, status)
-        VALUES (%s, %s, %s, 'active')
-    """, (user_id, start, end))
+        UPDATE subscriptions
+        SET status=%s, paid_until=%s
+        WHERE user_id=%s
+    """, (status, paid_until, user_id))
 
     conn.commit()
     conn.close()
@@ -506,6 +506,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
