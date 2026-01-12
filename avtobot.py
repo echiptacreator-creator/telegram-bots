@@ -12,6 +12,7 @@ from aiogram.types import (
     CallbackQuery,
     WebAppInfo
 )
+from datetime import date
 from profile_utils import ensure_profile
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
@@ -30,6 +31,23 @@ from aiogram.filters import CommandStart
 init_db()
 
 car_states = defaultdict(dict)
+
+def has_active_subscription(user_id: int) -> bool:
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT paid_until
+        FROM subscriptions
+        WHERE user_id = %s AND status = 'active'
+    """, (user_id,))
+    row = cur.fetchone()
+    conn.close()
+
+    if not row:
+        return False
+
+    paid_until = row[0]
+    return paid_until >= date.today()
 
 
 # ================= CONFIG =================
@@ -1147,6 +1165,7 @@ async def save_car(cb: CallbackQuery):
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
+
 
 
 
