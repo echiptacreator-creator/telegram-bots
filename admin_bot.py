@@ -158,7 +158,7 @@ async def approve_payment(call: CallbackQuery):
     user_id = call.data.split(":")[1]
 
     # 1️⃣ OBUNANI YOQISH (sening mavjud funksiyang)
-    update_subscription(user_id)
+    update_subscription(user_id, "active")
 
     # 2️⃣ USERGA XABAR
     await bot.send_message(
@@ -506,6 +506,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
