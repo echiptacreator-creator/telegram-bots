@@ -17,6 +17,7 @@ from payment_db import add_payment, load_payments
 from stats_db import load_stats
 from database import init_db
 from config import PRICE
+from database import get_db
 
 
 init_db()
@@ -545,6 +546,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
