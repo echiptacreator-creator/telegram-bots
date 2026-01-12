@@ -164,63 +164,45 @@ async def receive_receipt(message: Message):
 async def approve_payment(call: CallbackQuery):
     user_id = call.data.split(":")[1]
 
-    if cb.from_user.id != ADMIN_ID:
-        await cb.answer("Ruxsat yo‘q", show_alert=True)
-        return
+    # 1️⃣ OBUNANI YOQISH (sening mavjud funksiyang)
+    update_subscription(user_id)
 
-    user_id = cb.data.split("_")[2]
+    # 2️⃣ USERGA XABAR
+    await bot.send_message(
+        chat_id=int(user_id),
+        text="✅ To‘lovingiz tasdiqlandi. Obunangiz faollashtirildi 🎉"
+    )
 
-    subs = get_all_subs()
-    if user_id not in subs:
-        await cb.answer("Foydalanuvchi topilmadi", show_alert=True)
-        return
+    # 3️⃣ ADMIN CHAT
+    await call.message.answer("✅ To‘lov tasdiqlandi")
 
-    # ❗ AGAR ALLAQACHON TASDIQLANGAN BO‘LSA
-    if subs[user_id]["status"] == "active":
-        await cb.answer("Bu to‘lov allaqachon tasdiqlangan", show_alert=True)
-        return
+    await call.answer()
+
 
 
     from datetime import date, timedelta
-    paid_until = date.today() + timedelta(days=30)
 
-    subs[user_id]["status"] = "active"
-    subs[user_id]["paid_until"] = str(paid_until)
-    update_subscription(user_id, "active", str(paid_until))
+def approve_subscription(user_id: str, amount: int, period_days: int):
+    start = date.today()
+    end = start + timedelta(days=period_days)
 
+    conn = get_db()
+    cur = conn.cursor()
 
+    # 1️⃣ payment tarixi
+    cur.execute("""
+        INSERT INTO payments (user_id, amount, period_days, approved)
+        VALUES (%s, %s, %s, TRUE)
+    """, (user_id, amount, period_days))
 
-    # 💰 TO‘LOVNI TARIXGA YOZAMIZ
-    add_payment(
-        user_id=int(user_id),
-        amount=PRICE,
-        days=30,
-        approved_by=ADMIN_ID
-        
-    )
-    # 1️⃣ ADMIN UCHUN – STATUS XABARI (YANGI)
-    await cb.message.answer(
-        "✅ TO‘LOV TASDIQLANDI\n\n"
-        f"👤 User ID: {user_id}\n"
-        f"📅 Tugash sanasi: {paid_until}"
-    )
+    # 2️⃣ subscription
+    cur.execute("""
+        INSERT INTO subscriptions (user_id, start_date, end_date, status)
+        VALUES (%s, %s, %s, 'active')
+    """, (user_id, start, end))
 
-    # 2️⃣ MIJOZGA – ADMIN BOTDAN
-    await bot.send_message(
-        int(user_id),
-        "✅ To‘lovingiz tasdiqlandi!\n\n"
-        f"📅 Obuna muddati: {paid_until}\n"
-        "🚀 Endi xizmatdan foydalanishingiz mumkin."
-    )
-
-    # 3️⃣ MIJOZGA – XIZMAT BOTDAN
-    await service_bot.send_message(   # 👈 pastda tushuntiraman
-        int(user_id),
-        "🎉 To‘lovingiz tasdiqlandi!\n\n"
-        "Endi bot funksiyalaridan foydalanishingiz mumkin."
-    )
-
-    await cb.answer()
+    conn.commit()
+    conn.close()
 
 @dp.callback_query(F.data.startswith("reject:"))
 async def reject_payment(call: CallbackQuery):
@@ -532,6 +514,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
