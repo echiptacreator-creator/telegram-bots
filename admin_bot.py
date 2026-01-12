@@ -12,7 +12,7 @@ from aiogram.types import (
     InlineKeyboardButton,
 )
 
-from subscription_db import get_all_subs, update_subscription
+from subscription_db import get_all_subs,
 from payment_db import add_payment, load_payments
 from stats_db import load_stats
 from database import init_db
@@ -175,28 +175,6 @@ async def approve_payment(call: CallbackQuery):
 
     from datetime import date, timedelta
 
-def approve_subscription(user_id: str, amount: int, period_days: int):
-    start = date.today()
-    end = start + timedelta(days=period_days)
-
-    conn = get_db()
-    cur = conn.cursor()
-
-    # 1️⃣ payment tarixi
-    cur.execute("""
-        INSERT INTO payments (user_id, amount, period_days, approved)
-        VALUES (%s, %s, %s, TRUE)
-    """, (user_id, amount, period_days))
-
-    # 2️⃣ subscription (FAOLLASHTIRISH)
-    cur.execute("""
-        UPDATE subscriptions
-        SET status=%s, paid_until=%s
-        WHERE user_id=%s
-    """, ("active", end, user_id))
-
-    conn.commit()
-    conn.close()
 
 @dp.callback_query(F.data.startswith("reject:"))
 async def reject_payment(call: CallbackQuery):
@@ -316,47 +294,33 @@ async def pending_payments(message: Message):
     if message.from_user.id != ADMIN_ID:
         return
 
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute("""
-        INSERT INTO subscriptions (user_id, status)
-        VALUES (%s, %s)
-        ON CONFLICT (user_id)
-        DO UPDATE SET status = %s
-    """, (int(user_id), "pending", "pending"))
-    conn.commit()
-    conn.close()
-
+    subs = get_all_subs()
+    pending = {uid: u for uid, u in subs.items() if u["status"] == "pending"}
 
     if not pending:
         await message.answer("🧾 Kutilayotgan to‘lovlar yo‘q.")
         return
 
     for uid, user in pending.items():
-        username = user.get("username", "—")
-
         kb = InlineKeyboardMarkup(
             inline_keyboard=[
                 [
                     InlineKeyboardButton(
-                        text="✅ 30 kun tasdiqlash",
-                        callback_data=f"approve_30_{uid}"
+                        text="✅ Tasdiqlash",
+                        callback_data=f"approve:{uid}"
                     ),
                     InlineKeyboardButton(
                         text="❌ Rad etish",
-                        callback_data=f"reject_{uid}"
+                        callback_data=f"reject:{uid}"
                     )
                 ]
             ]
         )
 
         await message.answer(
-            f"👤 ID: {uid}\n"
-            f"👤 Username: @{username}\n"
-            f"🕒 Holat: kutilmoqda",
+            f"👤 ID: {uid}\n🕒 Holat: kutilmoqda",
             reply_markup=kb
         )
-
 
 @dp.message(F.text == "🟢 Faol obunalar")
 async def active_subscriptions(message: Message):
@@ -517,6 +481,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
