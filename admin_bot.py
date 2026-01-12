@@ -405,7 +405,7 @@ async def block_subscription(cb: CallbackQuery):
         return
 
     subs[user_id]["status"] = "blocked"
-    update_subscription(user_id, "blocked", None)
+    update_subscription(user_id, "rejected")
 
 
 
@@ -506,6 +506,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
