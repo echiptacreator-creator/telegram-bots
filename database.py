@@ -15,9 +15,11 @@ def init_db():
     # === OBUNALAR ===
     cur.execute("""
     CREATE TABLE IF NOT EXISTS subscriptions (
-        user_id BIGINT PRIMARY KEY,
-        status TEXT,
-        paid_until DATE,
+        id SERIAL PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        start_date DATE NOT NULL,
+        end_date DATE NOT NULL,
+        status TEXT NOT NULL, -- active | expired | blocked
         created_at TIMESTAMP DEFAULT NOW()
     );
     """)
@@ -57,9 +59,11 @@ def init_db():
     cur.execute("""
     CREATE TABLE IF NOT EXISTS payments (
         id SERIAL PRIMARY KEY,
-        user_id BIGINT,
-        amount BIGINT,
-        created_at BIGINT
+        user_id TEXT NOT NULL,
+        amount INTEGER NOT NULL,
+        period_days INTEGER NOT NULL,
+        payment_date TIMESTAMP DEFAULT NOW(),
+        approved BOOLEAN NOT NULL
     );
     """)
 
@@ -77,6 +81,7 @@ def init_db():
     conn.commit()
     cur.close()
     conn.close()
+
 
 
 
