@@ -327,7 +327,7 @@ async def logout_handler(message: Message):
 
 @dp.message(F.text == "➕ Xabar yuborish")
 async def post_start(message: Message):
-        if not can_use_bot(message.from_user.id):
+    if not can_use_bot(message.from_user.id):
         await message.answer(
             "❌ Bepul foydalanish limiti tugadi.\n\n"
             "💳 Davom etish uchun to‘lov qiling."
@@ -1193,6 +1193,7 @@ async def save_car(cb: CallbackQuery):
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
+
 
 
 
