@@ -59,7 +59,8 @@ def run(coro):
 # ======================
 @app.route("/")
 def index():
-    return "LOGIN SERVER WORKING"
+    return render_template("landing.html")
+
 
 
 @app.route("/miniapp")
@@ -241,4 +242,5 @@ def verify_password():
 # ======================
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
+
 
