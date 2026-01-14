@@ -22,7 +22,6 @@ from database import (
     save_user,
     save_user_session
 )
-
 # ======================
 # CONFIG
 # ======================
@@ -242,3 +241,4 @@ def verify_password():
 # ======================
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
+
